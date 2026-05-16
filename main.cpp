@@ -78,8 +78,8 @@ int main(int argc, char *argv[]) {
   const uint16_t stun_port =
       static_cast<uint16_t>(std::stoi(std::string(argv[2])));
 
-  stun_header header = create_stun_request();
-  udp_send(std::span(reinterpret_cast<uint8_t *>(&header), sizeof(header)),
+  StunMessage message = create_stun_request();
+  udp_send(std::span(reinterpret_cast<uint8_t *>(&message.header), sizeof(message.header)),
           stun_address, stun_port);
 
   std::cout << "goodbye!\n";

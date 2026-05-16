@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <arpa/inet.h>
 #include <iostream>
+#include <vector>
 
 constexpr uint32_t kBufferSize = 1024 * 64;
 constexpr uint32_t kMagicCookie = 0x2112A442;
@@ -35,25 +36,37 @@ uint16_t create_stun_message_type(StunMethod method,
   return message_type;
 }
 
-struct stun_header {
+struct StunHeader {
   uint16_t message_type;
   uint16_t message_length;
   uint32_t magic_cookie;
   uint32_t transaction_id[3];
 };
-static_assert(sizeof(stun_header) == kStunHeaderSize);
+static_assert(sizeof(StunHeader) == kStunHeaderSize);
 
-stun_header create_stun_request() {
-  stun_header header{};
+struct StunAttribute {
+    uint16_t type;
+    uint16_t length;
+    std::vector<uint8_t> value;
+};
+
+struct StunMessage
+{
+    StunHeader header;
+    std::vector<StunAttribute> attributes;
+};
+
+StunMessage create_stun_request() {
+  StunMessage message{};
 
   uint16_t message_type = create_stun_message_type(StunMethod::binding, StunClass::request);
-  header.message_type = htons(message_type);
-  header.message_length = 0;
-  header.magic_cookie = htonl(kMagicCookie);
-  header.transaction_id[0] = 1;
+  message.header.message_type = htons(message_type);
+  message.header.message_length = 0;
+  message.header.magic_cookie = htonl(kMagicCookie);
+  message.header.transaction_id[0] = 1;
 
-  return header;
+  return message;
 }
 
-void print_stun_message(const stun_header &header);
+void print_stun_message(const StunMessage &message);
 void convert_bytes_to_stun_message();
