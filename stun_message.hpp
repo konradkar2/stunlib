@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <span>
+#include <iomanip>
 
 constexpr uint32_t kBufferSize = 1024 * 64;
 constexpr uint32_t kMagicCookie = 0x2112A442;
@@ -43,13 +44,13 @@ struct StunMessage
   void print_info() {
     std::cout << "STUN MESSAGE INFO\n";
     std::cout << "HEADER\n";
-    std::cout << "Message type: " << header.message_type << std::endl;
-    std::cout << "Message length: " << header.message_length << std::endl;
-    std::cout << "Magic cookie: 0x" << std::hex << header.magic_cookie << std::endl;
+    std::cout << "Message type: 0x" << std::setw(4)  << std::setfill('0') << header.message_type << std::endl;
+    std::cout << "Message length: 0x" << std::setw(4)  << std::setfill('0') << header.message_length << std::endl;
+    std::cout << "Magic cookie: 0x" << std::setw(8)  << std::setfill('0') << header.magic_cookie << std::endl;
     std::cout << "Transaction ID: [2]: 0x" 
-              << header.transaction_id[2] << ", [1]: 0x"
-              << header.transaction_id[1] << ", [0]: 0x"
-              << header.transaction_id[0] << std::endl;
+              << std::setw(8)  << std::setfill('0') << header.transaction_id[2] << ", [1]: 0x"
+              << std::setw(8)  << std::setfill('0') << header.transaction_id[1] << ", [0]: 0x"
+              << std::setw(8)  << std::setfill('0') << header.transaction_id[0] << std::endl;
     std::cout << "ATTRIBUTES\n";
     //ToDo
     std::cout << std::dec;
