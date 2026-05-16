@@ -54,18 +54,19 @@ void udp_send(std::span<uint8_t> data, std::string address, uint16_t port) {
     THROW_WITH_ERRNO(sendto);
   }
 
-  uint8_t buffor[kBufferSize];
+  uint8_t buffer[kBufferSize];
 
   struct sockaddr response_addr{};
   socklen_t response_addr_len = sizeof(response_addr);
   int flags = 0;
-  ssize_t received_n_bytes = recvfrom(fd, buffor, sizeof(buffor), flags,
+  ssize_t received_n_bytes = recvfrom(fd, buffer, sizeof(buffer), flags,
                                       &response_addr, &response_addr_len);
   if (received_n_bytes < 0) {
     THROW_WITH_ERRNO(recvfrom);
   }
-
-  dump_buffer(std::span{buffor, static_cast<size_t>(received_n_bytes)});
+  dump_buffer(std::span{buffer, static_cast<size_t>(received_n_bytes)});
+  StunMessage response = convert_bytes_to_stun_message(std::span{buffer, static_cast<size_t>(received_n_bytes)});
+  response.print_info();
 }
 
 int main(int argc, char *argv[]) {

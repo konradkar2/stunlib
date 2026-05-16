@@ -20,23 +20,6 @@ enum class StunClass {
   error_response = 3
 };
 
-uint16_t pack_stun_message_type(StunMethod method,
-                                  StunClass cls) {
-  if (method != StunMethod::binding) {
-    throw std::runtime_error("unimplemented method");
-  }
-  const uint16_t m = static_cast<uint16_t>(method);
-  const uint16_t c = static_cast<uint16_t>(cls);
-  uint16_t message_type =
-    (m & 0x000F) |              // M0-M3 -> bits 0..3
-    ((m & 0x0070) << 1) |       // M4-M6 -> bits 5..7
-    ((m & 0x0F80) << 2) |       // M7-M11 -> bits 9..13
-    ((c & 0x02) << 7) |         // C1 -> bit 8
-    ((c & 0x01) << 4);          // C0 -> bit 4
-
-  return message_type;
-}
-
 struct StunHeader {
   uint16_t message_type;
   uint16_t message_length;
@@ -73,6 +56,23 @@ struct StunMessage
   }
 };
 
+uint16_t pack_stun_message_type(StunMethod method,
+                                  StunClass cls) {
+  if (method != StunMethod::binding) {
+    throw std::runtime_error("unimplemented method");
+  }
+  const uint16_t m = static_cast<uint16_t>(method);
+  const uint16_t c = static_cast<uint16_t>(cls);
+  uint16_t message_type =
+    (m & 0x000F) |              // M0-M3 -> bits 0..3
+    ((m & 0x0070) << 1) |       // M4-M6 -> bits 5..7
+    ((m & 0x0F80) << 2) |       // M7-M11 -> bits 9..13
+    ((c & 0x02) << 7) |         // C1 -> bit 8
+    ((c & 0x01) << 4);          // C0 -> bit 4
+
+  return message_type;
+}
+
 StunMessage create_stun_request() {
   StunMessage message{};
 
@@ -86,5 +86,26 @@ StunMessage create_stun_request() {
 }
 
 StunMessage convert_bytes_to_stun_message(std::span<uint8_t> data) {
-  
+  StunMessage message;
+  message.header.message_type = (static_cast<uint16_t>(data[0]) << 8) | 
+                                (static_cast<uint16_t>(data[1]));
+  message.header.message_length = (static_cast<uint16_t>(data[2]) << 8) | 
+                                  (static_cast<uint16_t>(data[3]));
+  message.header.magic_cookie = (static_cast<uint32_t>(data[4]) << 24) | 
+                                (static_cast<uint32_t>(data[5]) << 16) |
+                                (static_cast<uint32_t>(data[6]) << 8) | 
+                                (static_cast<uint32_t>(data[7]));
+  message.header.transaction_id[2] = (static_cast<uint32_t>(data[8]) << 24) | 
+                                     (static_cast<uint32_t>(data[9]) << 16) |
+                                     (static_cast<uint32_t>(data[10]) << 8) | 
+                                     (static_cast<uint32_t>(data[11]));
+  message.header.transaction_id[1] = (static_cast<uint32_t>(data[12]) << 24) | 
+                                     (static_cast<uint32_t>(data[13]) << 16) |
+                                     (static_cast<uint32_t>(data[14]) << 8) | 
+                                     (static_cast<uint32_t>(data[15]));
+  message.header.transaction_id[0] = (static_cast<uint32_t>(data[16]) << 24) | 
+                                     (static_cast<uint32_t>(data[17]) << 16) |
+                                     (static_cast<uint32_t>(data[18]) << 8) | 
+                                     (static_cast<uint32_t>(data[19]));
+  return message;
 }
