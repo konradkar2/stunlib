@@ -22,10 +22,11 @@
                      strerror(errno))
 
 void dump_buffer(std::span<uint8_t> data) {
+  std::cout << "{";
   for (size_t i = 0; i < data.size(); ++i) {
-    std::cout << static_cast<uint16_t>(data[i]);
+    std::cout << i << ":" << static_cast<uint16_t>(data[i]) << ", ";
   }
-  std::cout << std::endl;
+  std::cout << "}" << std::endl;
 }
 
 void udp_send(std::span<uint8_t> data, std::string address, uint16_t port) {
