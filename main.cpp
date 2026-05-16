@@ -16,7 +16,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define BUFFOR_SIZE 1024 * 64
+#include "stun_client.hpp"
+
+constexpr uint32_t kBufferSize = 1024 * 64;
+constexpr uint32_t kMagicCookie = 0x2112A442;
+constexpr uint32_t kStunHeaderSize = 20;
 
 #define THROW_WITH_ERRNO(function)                                             \
   std::runtime_error(std::string{} + "failed to use " #function + ": " +       \
@@ -53,7 +57,7 @@ void udpSend(std::span<uint8_t> data, std::string address, uint16_t port) {
     THROW_WITH_ERRNO(sendto);
   }
 
-  uint8_t buffor[BUFFOR_SIZE];
+  uint8_t buffor[kBufferSize];
 
   struct sockaddr response_addr{};
   socklen_t response_addr_len = sizeof(response_addr);
@@ -148,16 +152,13 @@ uint16_t pack_stun_message_type(const StunMessageType &t) {
   return type;
 }
 
-#define STUN_HEADER_SIZE 20
-constexpr uint32_t MagicCookie = 0x2112A442;
-
 struct stun_header {
   uint16_t message_type;
   uint16_t message_length;
   uint32_t magic_cookie;
   uint32_t transaction_id[3];
 };
-static_assert(sizeof(stun_header) == STUN_HEADER_SIZE);
+static_assert(sizeof(stun_header) == kStunHeaderSize);
 
 stun_header create_stun_request() {
   stun_header header{};
@@ -165,7 +166,7 @@ stun_header create_stun_request() {
   StunMessageType message_type = create_stun_message_type(StunMethod::binding, StunClass::request);
   header.message_type = htons(pack_stun_message_type(message_type));
   header.message_length = 0;
-  header.magic_cookie = htonl(MagicCookie);
+  header.magic_cookie = htonl(kMagicCookie);
   header.transaction_id[0] = 1;
 
   return header;
