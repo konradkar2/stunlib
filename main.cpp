@@ -79,6 +79,7 @@ int main(int argc, char *argv[]) {
       static_cast<uint16_t>(std::stoi(std::string(argv[2])));
 
   StunMessage message = create_stun_request();
+  message.print_info();
   udp_send(std::span(reinterpret_cast<uint8_t *>(&message.header), sizeof(message.header)),
           stun_address, stun_port);
 

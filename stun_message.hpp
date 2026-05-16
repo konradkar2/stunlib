@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <vector>
+#include <span>
 
 constexpr uint32_t kBufferSize = 1024 * 64;
 constexpr uint32_t kMagicCookie = 0x2112A442;
@@ -19,7 +20,7 @@ enum class StunClass {
   error_response = 3
 };
 
-uint16_t create_stun_message_type(StunMethod method,
+uint16_t pack_stun_message_type(StunMethod method,
                                   StunClass cls) {
   if (method != StunMethod::binding) {
     throw std::runtime_error("unimplemented method");
@@ -44,22 +45,38 @@ struct StunHeader {
 };
 static_assert(sizeof(StunHeader) == kStunHeaderSize);
 
+// ToDo
 struct StunAttribute {
-    uint16_t type;
-    uint16_t length;
-    std::vector<uint8_t> value;
+  uint16_t type;
+  uint16_t length;
+  std::vector<uint8_t> value;
 };
 
 struct StunMessage
 {
-    StunHeader header;
-    std::vector<StunAttribute> attributes;
+  StunHeader header;
+  std::vector<StunAttribute> attributes;
+
+  void print_info() {
+    std::cout << "STUN MESSAGE INFO\n";
+    std::cout << "HEADER\n";
+    std::cout << "Message type: " << header.message_type << std::endl;
+    std::cout << "Message length: " << header.message_length << std::endl;
+    std::cout << "Magic cookie: 0x" << std::hex << header.magic_cookie << std::endl;
+    std::cout << "Transaction ID: [2]: 0x" 
+              << header.transaction_id[2] << ", [1]: 0x"
+              << header.transaction_id[1] << ", [0]: 0x"
+              << header.transaction_id[0] << std::endl;
+    std::cout << "ATTRIBUTES\n";
+    //ToDo
+    std::cout << std::dec;
+  }
 };
 
 StunMessage create_stun_request() {
   StunMessage message{};
 
-  uint16_t message_type = create_stun_message_type(StunMethod::binding, StunClass::request);
+  uint16_t message_type = pack_stun_message_type(StunMethod::binding, StunClass::request);
   message.header.message_type = htons(message_type);
   message.header.message_length = 0;
   message.header.magic_cookie = htonl(kMagicCookie);
@@ -68,5 +85,6 @@ StunMessage create_stun_request() {
   return message;
 }
 
-void print_stun_message(const StunMessage &message);
-void convert_bytes_to_stun_message();
+StunMessage convert_bytes_to_stun_message(std::span<uint8_t> data) {
+  
+}
