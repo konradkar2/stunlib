@@ -3,11 +3,10 @@
 #include <cstring>
 #include <iostream>
 
-#include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <span>
-#include <stdexcept>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
@@ -15,20 +14,23 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <span>
+#include "stun_message.hpp"
 
-#define BUFFOR_SIZE 1024 * 64
 
 #define THROW_WITH_ERRNO(function)                                             \
   std::runtime_error(std::string{} + "failed to use " #function + ": " +       \
                      strerror(errno))
 
 void dump_buffer(std::span<uint8_t> data) {
+  std::cout << "{";
   for (size_t i = 0; i < data.size(); ++i) {
-    std::cout << static_cast<uint16_t>(data[i]);
+    std::cout << i << ":" << static_cast<uint16_t>(data[i]) << ", ";
   }
+  std::cout << "}" << std::endl;
 }
 
-void udpSend(std::span<uint8_t> data, std::string address, uint16_t port) {
+void udp_send(std::span<uint8_t> data, std::string address, uint16_t port) {
 
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -53,122 +55,19 @@ void udpSend(std::span<uint8_t> data, std::string address, uint16_t port) {
     THROW_WITH_ERRNO(sendto);
   }
 
-  uint8_t buffor[BUFFOR_SIZE];
+  uint8_t buffer[kBufferSize];
 
   struct sockaddr response_addr{};
   socklen_t response_addr_len = sizeof(response_addr);
   int flags = 0;
-  ssize_t received_n_bytes = recvfrom(fd, buffor, sizeof(buffor), flags,
+  ssize_t received_n_bytes = recvfrom(fd, buffer, sizeof(buffer), flags,
                                       &response_addr, &response_addr_len);
   if (received_n_bytes < 0) {
     THROW_WITH_ERRNO(recvfrom);
   }
-
-  dump_buffer(std::span{buffor, static_cast<size_t>(received_n_bytes)});
-}
-
-enum class StunMethod {
-  binding = 1,
-};
-
-enum class StunClass {
-  request = 0,
-  indication = 1,
-  success_response = 2,
-  error_response = 3
-};
-
-struct StunMessageType {
-    uint8_t padding : 2;
-    uint8_t m11 : 1;
-    uint8_t m10 : 1;
-    uint8_t m9 : 1;
-    uint8_t m8 : 1;
-    uint8_t m7 : 1;
-    uint8_t c1 : 1;
-    uint8_t m6 : 1;
-    uint8_t m5 : 1;
-    uint8_t m4 : 1;
-    uint8_t c0 : 1;
-    uint8_t m3 : 1;
-    uint8_t m2 : 1;
-    uint8_t m1 : 1;
-    uint8_t m0 : 1;
-};
-static_assert(sizeof(StunMessageType) == 2);
-
-StunMessageType create_stun_message_type(StunMethod method,
-                                         StunClass stun_class) {
-  StunMessageType message_type{};
-
-  if (method != StunMethod::binding) {
-    throw std::runtime_error("unimplemented method");
-  }
-  message_type.m0 = 1; // binding
-
-  switch (stun_class) {
-  case StunClass::request:
-    message_type.c1 = 0;
-    message_type.c0 = 0;
-    break;
-  case StunClass::indication:
-    message_type.c1 = 0;
-    message_type.c0 = 1;
-    break;
-  case StunClass::success_response:
-    message_type.c1 = 1;
-    message_type.c0 = 0;
-    break;
-  case StunClass::error_response:
-    message_type.c1 = 1;
-    message_type.c0 = 1;
-    break;
-  default:
-    throw std::runtime_error("invalid stun class provided");
-  }
-
-  return message_type;
-}
-
-uint16_t pack_stun_message_type(const StunMessageType &t) {
-  uint16_t method =
-      (t.m0  << 0)  | (t.m1  << 1)  | (t.m2  << 2)  | (t.m3  << 3) |
-      (t.m4  << 4)  | (t.m5  << 5)  | (t.m6  << 6)  | (t.m7  << 7) |
-      (t.m8  << 8)  | (t.m9  << 9)  | (t.m10 << 10) | (t.m11 << 11);
-  uint16_t cls = (t.c1 << 1) | (t.c0 << 0);
-
-  // Kodowanie zgodne z RFC5389 (wstawienie bitów klasy w odpowiednie pozycje)
-  uint16_t type =
-    (method & 0x000F) |              // M0-M3 -> bits 0..3
-    ((method & 0x0070) << 1) |       // M4-M6 -> bits 5..7
-    ((method & 0x0F80) << 2) |       // M7-M11 -> bits 9..13
-    ((cls    & 0x02) << 7) |         // C1 -> bit 8
-    ((cls    & 0x01) << 4);          // C0 -> bit 4
-
-  return type;
-}
-
-#define STUN_HEADER_SIZE 20
-constexpr uint32_t MagicCookie = 0x2112A442;
-
-struct stun_header {
-  uint16_t message_type;
-  uint16_t message_length;
-  uint32_t magic_cookie;
-  uint32_t transaction_id[3];
-};
-static_assert(sizeof(stun_header) == STUN_HEADER_SIZE);
-
-stun_header create_stun_request() {
-  stun_header header{};
-
-  StunMessageType message_type = create_stun_message_type(StunMethod::binding, StunClass::request);
-  header.message_type = htons(pack_stun_message_type(message_type));
-  header.message_length = 0;
-  header.magic_cookie = htonl(MagicCookie);
-  header.transaction_id[0] = 1;
-
-  return header;
+  dump_buffer(std::span{buffer, static_cast<size_t>(received_n_bytes)});
+  StunMessage response = convert_bytes_to_stun_message(std::span{buffer, static_cast<size_t>(received_n_bytes)});
+  response.print();
 }
 
 int main(int argc, char *argv[]) {
@@ -181,8 +80,9 @@ int main(int argc, char *argv[]) {
   const uint16_t stun_port =
       static_cast<uint16_t>(std::stoi(std::string(argv[2])));
 
-  stun_header header = create_stun_request();
-  udpSend(std::span(reinterpret_cast<uint8_t *>(&header), sizeof(header)),
+  StunMessage message = create_stun_request();
+  message.print();
+  udp_send(std::span(reinterpret_cast<uint8_t *>(&message.header), sizeof(message.header)),
           stun_address, stun_port);
 
   std::cout << "goodbye!\n";

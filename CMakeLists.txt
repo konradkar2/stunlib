@@ -8,8 +8,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(
 -Wall
 -Wextra
-#-Wpedantic
-#-Wconversion
+-Wpedantic
+-Wconversion
 -Wshadow
 -Wformat=2
 -Wduplicated-branches
