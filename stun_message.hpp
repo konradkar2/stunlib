@@ -1,10 +1,8 @@
-#include <stdint.h>
-#include <stdexcept>
-#include <arpa/inet.h>
 #include <iostream>
 #include <vector>
 #include <span>
 #include <iomanip>
+#include <format>
 
 constexpr uint32_t kBufferSize = 1024 * 64;
 constexpr uint32_t kMagicCookie = 0x2112A442;
@@ -41,16 +39,16 @@ struct StunMessage
   StunHeader header;
   std::vector<StunAttribute> attributes;
 
-  void print_info() {
-    std::cout << "STUN MESSAGE INFO\n";
+  void print() {
     std::cout << "HEADER\n";
+    std::cout << std::hex;
     std::cout << "Message type: 0x" << std::setw(4)  << std::setfill('0') << header.message_type << std::endl;
     std::cout << "Message length: 0x" << std::setw(4)  << std::setfill('0') << header.message_length << std::endl;
     std::cout << "Magic cookie: 0x" << std::setw(8)  << std::setfill('0') << header.magic_cookie << std::endl;
     std::cout << "Transaction ID: [2]: 0x" 
-              << std::setw(8)  << std::setfill('0') << header.transaction_id[2] << ", [1]: 0x"
-              << std::setw(8)  << std::setfill('0') << header.transaction_id[1] << ", [0]: 0x"
-              << std::setw(8)  << std::setfill('0') << header.transaction_id[0] << std::endl;
+              << std::setw(8) << std::setfill('0') << header.transaction_id[2]
+              << std::setw(8) << std::setfill('0') << header.transaction_id[1]
+              << std::setw(8) << std::setfill('0') << header.transaction_id[0] << std::endl;
     std::cout << "ATTRIBUTES\n";
     //ToDo
     std::cout << std::dec;
@@ -87,11 +85,15 @@ StunMessage create_stun_request() {
 }
 
 StunMessage convert_bytes_to_stun_message(std::span<uint8_t> data) {
-  StunMessage message;
+  StunMessage message{};
   message.header.message_type = (static_cast<uint16_t>(data[0]) << 8) | 
                                 (static_cast<uint16_t>(data[1]));
   message.header.message_length = (static_cast<uint16_t>(data[2]) << 8) | 
                                   (static_cast<uint16_t>(data[3]));
+  const uint16_t expected_message_size = kStunHeaderSize + message.header.message_length; 
+  if (data.size() != expected_message_size) {
+    throw std::runtime_error(std::format("excpected message size is ", expected_message_size, ", but actual size is ", data.size()));
+  }
   message.header.magic_cookie = (static_cast<uint32_t>(data[4]) << 24) | 
                                 (static_cast<uint32_t>(data[5]) << 16) |
                                 (static_cast<uint32_t>(data[6]) << 8) | 

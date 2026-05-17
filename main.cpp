@@ -5,6 +5,7 @@
 
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <span>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,7 @@ void udp_send(std::span<uint8_t> data, std::string address, uint16_t port) {
   }
   dump_buffer(std::span{buffer, static_cast<size_t>(received_n_bytes)});
   StunMessage response = convert_bytes_to_stun_message(std::span{buffer, static_cast<size_t>(received_n_bytes)});
-  response.print_info();
+  response.print();
 }
 
 int main(int argc, char *argv[]) {
@@ -80,7 +81,7 @@ int main(int argc, char *argv[]) {
       static_cast<uint16_t>(std::stoi(std::string(argv[2])));
 
   StunMessage message = create_stun_request();
-  message.print_info();
+  message.print();
   udp_send(std::span(reinterpret_cast<uint8_t *>(&message.header), sizeof(message.header)),
           stun_address, stun_port);
 
