@@ -72,7 +72,7 @@ void udp_send(std::span<uint8_t> data, std::string address, uint16_t port) {
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
-    std::cout << "invalid arguments" << std::endl;
+    std::cout << "invalid arguments: <adresss> <port>" << std::endl;
     return 1;
   }
 
