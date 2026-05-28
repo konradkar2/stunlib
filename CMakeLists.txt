@@ -19,3 +19,5 @@ add_compile_options(
 )
 
 add_executable(${PROJECT_NAME} main.cpp)
+
+add_subdirectory(tests)
