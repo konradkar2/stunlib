@@ -18,6 +18,9 @@ add_compile_options(
 -Werror
 )
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_library(stun_lib stun_message.cpp)
+
+add_executable(${PROJECT_NAME} main.cpp )
+target_link_libraries(${PROJECT_NAME} PRIVATE stun_lib)
 
 add_subdirectory(tests)

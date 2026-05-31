@@ -1,10 +1,13 @@
+#include <cstdint>
 #include <cstring>
 #include <format>
 #include <iomanip>
-#include <iostream>
+
 #include <netinet/in.h>
 #include <span>
 #include <vector>
+
+namespace stun {
 
 constexpr uint32_t kBufferSize = 1024 * 64;
 constexpr uint32_t kMagicCookie = 0x2112A442;
@@ -21,95 +24,35 @@ enum class StunClass {
   error_response = 3
 };
 
+
 struct StunHeader {
-  uint16_t message_type;
+  StunMethod method;
+  StunClass cclass;
   uint16_t message_length;
   uint32_t magic_cookie;
   uint32_t transaction_id[3];
-};
-static_assert(sizeof(StunHeader) == kStunHeaderSize);
 
-// ToDo
+  size_t serialize(std::span<uint8_t> target) const;
+};
+
 struct StunAttribute {
   uint16_t type;
   uint16_t length;
   std::vector<uint8_t> value;
+
+  virtual size_t serialize(std::span<uint8_t> target) const;
+  virtual ~StunAttribute() = default;
 };
 
 struct StunMessage {
   StunHeader header;
   std::vector<StunAttribute> attributes;
 
-  void print() {
-    std::cout << "HEADER\n";
-    std::cout << std::hex;
-    std::cout << "Message type: 0x" << std::setw(4) << std::setfill('0')
-              << header.message_type << std::endl;
-    std::cout << "Message length: 0x" << std::setw(4) << std::setfill('0')
-              << header.message_length << std::endl;
-    std::cout << "Magic cookie: 0x" << std::setw(8) << std::setfill('0')
-              << header.magic_cookie << std::endl;
-    std::cout << "Transaction ID: 0x" << std::setw(8) << std::setfill('0')
-              << header.transaction_id[2] << std::setw(8) << std::setfill('0')
-              << header.transaction_id[1] << std::setw(8) << std::setfill('0')
-              << header.transaction_id[0] << std::endl;
-    std::cout << "ATTRIBUTES\n";
-    // ToDo
-    std::cout << std::dec;
-  }
+  static StunMessage deserialize(std::span<const uint8_t> src);
+  size_t serialize(std::span<uint8_t> target) const;
+  void print();
 };
 
-uint16_t pack_stun_message_type(StunMethod method, StunClass cls) {
-  if (method != StunMethod::binding) {
-    throw std::runtime_error("unimplemented method");
-  }
-  const uint16_t m = static_cast<uint16_t>(method);
-  const uint16_t c = static_cast<uint16_t>(cls);
-  uint16_t message_type = (m & 0x000F) |        // M0-M3 -> bits 0..3
-                          ((m & 0x0070) << 1) | // M4-M6 -> bits 5..7
-                          ((m & 0x0F80) << 2) | // M7-M11 -> bits 9..13
-                          ((c & 0x02) << 7) |   // C1 -> bit 8
-                          ((c & 0x01) << 4);    // C0 -> bit 4
+StunMessage create_stun_request();
 
-  return message_type;
-}
-
-StunMessage create_stun_request() {
-  StunMessage message{};
-
-  uint16_t message_type =
-      pack_stun_message_type(StunMethod::binding, StunClass::request);
-  message.header.message_type = htons(message_type);
-  message.header.message_length = 0;
-  message.header.magic_cookie = htonl(kMagicCookie);
-  message.header.transaction_id[0] = 1;
-
-  return message;
-}
-
-StunMessage convert_bytes_to_stun_message(std::span<uint8_t> data) {
-  if (data.size() < sizeof(StunHeader)) {
-    throw std::runtime_error(
-        std::format("invalid message size: {}", data.size()));
-  }
-
-  StunMessage message{};
-  std::memcpy(reinterpret_cast<uint8_t *>(&message.header), data.data(),
-              sizeof(message.header));
-  message.header.message_type = ntohs(message.header.message_type);
-  message.header.magic_cookie = ntohl(message.header.magic_cookie);
-  message.header.message_length = ntohs( message.header.message_length);
-
-
-
-  const uint16_t expected_message_size =
-      kStunHeaderSize + message.header.message_length;
-  
-  if (data.size() != expected_message_size) {
-    throw std::runtime_error(std::format("excpected message size is ",
-                                         expected_message_size,
-                                         ", but actual size is ", data.size()));
-  }
-
-  return message;
-}
+} // namespace stun

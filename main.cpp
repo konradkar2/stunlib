@@ -3,9 +3,10 @@
 #include <cstring>
 #include <iostream>
 
+#include "stun_message.hpp"
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <span>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,9 +15,9 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <span>
-#include "stun_message.hpp"
+#include <print>
 
+using namespace stun;
 
 #define THROW_WITH_ERRNO(function)                                             \
   std::runtime_error(std::string{} + "failed to use " #function + ": " +       \
@@ -66,7 +67,8 @@ void udp_send(std::span<uint8_t> data, std::string address, uint16_t port) {
     THROW_WITH_ERRNO(recvfrom);
   }
   dump_buffer(std::span{buffer, static_cast<size_t>(received_n_bytes)});
-  StunMessage response = convert_bytes_to_stun_message(std::span{buffer, static_cast<size_t>(received_n_bytes)});
+  StunMessage response = StunMessage::deserialize(
+      std::span{buffer, static_cast<size_t>(received_n_bytes)});
   response.print();
 }
 
@@ -82,8 +84,11 @@ int main(int argc, char *argv[]) {
 
   StunMessage message = create_stun_request();
   message.print();
-  udp_send(std::span(reinterpret_cast<uint8_t *>(&message.header), sizeof(message.header)),
-          stun_address, stun_port);
+  uint8_t buffor[512] = {};
 
-  std::cout << "goodbye!\n";
+  size_t size = message.serialize(std::span{buffor, sizeof(buffor)});
+  printf("sizes of serialized stun message: %zu\n", size);
+  udp_send(std::span{buffor, size}, stun_address, stun_port);
+
+  printf("goodbye\n");
 }
