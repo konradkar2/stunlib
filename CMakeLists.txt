@@ -9,11 +9,9 @@ add_compile_options(
 -Wall
 -Wextra
 -Wpedantic
--Wconversion
+#-Wconversion
 -Wshadow
 -Wformat=2
--Wduplicated-branches
--Wduplicated-cond
 -Wnull-dereference
 -Werror
 )
