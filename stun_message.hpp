@@ -17,6 +17,8 @@ enum class StunMethod {
   binding = 1,
 };
 
+std::ostream& operator<<(std::ostream& os, StunMethod method);
+
 enum class StunClass {
   request = 0,
   indication = 1,
@@ -24,6 +26,7 @@ enum class StunClass {
   error_response = 3
 };
 
+std::ostream& operator<<(std::ostream& os, StunMethod cclass);
 
 struct StunHeader {
   StunMethod method;

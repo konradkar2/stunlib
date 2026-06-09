@@ -38,13 +38,30 @@ std::pair<StunMethod, StunClass> decode_message_type(uint16_t message_type) {
   return {static_cast<StunMethod>(m), static_cast<StunClass>(c)};
 }
 
+std::ostream& operator<<(std::ostream& os, StunMethod method) {
+  switch (method) {
+    case StunMethod::binding: return os << "binding";
+  }
+  return os << "unknown";
+}
+
+std::ostream& operator<<(std::ostream& os, StunClass cclass) {
+  switch (cclass) {
+    case StunClass::request: return os << "request";
+    case StunClass::indication: return os << "indication";
+    case StunClass::success_response: return os << "success_response";
+    case StunClass::error_response: return os << "error_response";
+  }
+  return os << "unknown";
+}
+
 void StunMessage::print() {
   std::cout << "HEADER\n";
   std::cout << std::hex;
   std::cout << "Message method: 0x" << std::setw(4) << std::setfill('0')
-            << static_cast<int>(header.method) << std::endl;
+            << static_cast<int>(header.method) << " (" << header.method << ")" << std::endl;
   std::cout << "Message class: 0x" << std::setw(4) << std::setfill('0')
-            << static_cast<int>(header.cclass) << std::endl;
+            << static_cast<int>(header.cclass) << " (" << header.cclass << ")" << std::endl;
   std::cout << "Message length: 0x" << std::setw(4) << std::setfill('0')
             << header.message_length << std::endl;
   std::cout << "Magic cookie: 0x" << std::setw(8) << std::setfill('0')
