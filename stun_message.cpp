@@ -154,7 +154,10 @@ StunMessage create_stun_request() {
   message.header.method = StunMethod::binding;
   message.header.message_length = 0;
   message.header.magic_cookie = kMagicCookie;
-  message.header.transaction_id[0] = 1;
+  srand (time(NULL));
+  message.header.transaction_id[0] = std::rand();
+  message.header.transaction_id[1] = std::rand();
+  message.header.transaction_id[2] = std::rand();
 
   return message;
 }

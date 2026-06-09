@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <span>
 #include <vector>
+#include <cstdlib>
 
 namespace stun {
 
