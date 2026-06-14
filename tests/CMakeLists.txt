@@ -1,15 +1,15 @@
 add_executable(
     my_tests
     example_test.cpp
+    stun_attributes_test.cpp
 )
-
-enable_testing()
 
 find_package(GTest)
 
 target_link_libraries(
     my_tests
     PRIVATE
+    stun_lib
     GTest::gtest_main
 )
 

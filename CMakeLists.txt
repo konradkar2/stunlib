@@ -16,9 +16,11 @@ add_compile_options(
 -Werror
 )
 
-add_library(stun_lib stun_message.cpp)
+add_library(stun_lib stun_message.cpp stun_attributes.cpp)
+target_include_directories(stun_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(${PROJECT_NAME} main.cpp )
 target_link_libraries(${PROJECT_NAME} PRIVATE stun_lib)
 
+enable_testing()
 add_subdirectory(tests)
