@@ -1,4 +1,5 @@
 #include "stun_attributes.hpp"
+#include "stun_message.hpp"
 
 #include <array>
 #include <cstdint>

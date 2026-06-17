@@ -4,13 +4,42 @@
 
 namespace stun {
 
+size_t StunAttribute::serialize(std::span<uint8_t> target) const {
+  const size_t padded_length = (value.size() + 3) & ~size_t{3};
+  const size_t attribute_size = sizeof(type) + sizeof(length) + padded_length;
+
+  if (target.size() < attribute_size) {
+    throw std::runtime_error("invalid attribute size");
+  }
+
+  size_t offset = 0;
+
+  uint16_t encoded_type = htons(type);
+  std::memcpy(target.data() + offset, &encoded_type, sizeof(encoded_type));
+  offset += sizeof(encoded_type);
+
+  uint16_t encoded_length = htons(length);
+  std::memcpy(target.data() + offset, &encoded_length, sizeof(encoded_length));
+  offset += sizeof(encoded_length);
+
+  std::memcpy(target.data() + offset, value.data(), value.size());
+  offset += value.size();
+
+  if (padded_length > value.size()) {
+    std::memset(target.data() + offset, 0, padded_length - value.size());
+    offset += padded_length - value.size();
+  }
+
+  return offset;
+}
+
 MappedAddressAttribute MappedAddressAttribute::create_v4(uint16_t port,
                                                          uint32_t address) {
   MappedAddressAttribute ret{};
 
   ret.type = 0;   // TODO: insert type
   ret.length = 8; // padding(1) + familiy(1) + port(2) + ipv4(4)
-  ret.m_family = AdressFamily::IPv4;
+  ret.m_family = AddressFamily::IPv4;
   ret.m_port = port;
   ret.m_address.ipv4 = address;
 
@@ -23,7 +52,7 @@ MappedAddressAttribute MappedAddressAttribute::create_v6(uint16_t port,
 
   ret.type = 0;    // TODO: insert type
   ret.length = 20; // padding(1) + familiy(1) + port(2) + ipv4(16)
-  ret.m_family = AdressFamily::IPv6;
+  ret.m_family = AddressFamily::IPv6;
   ret.m_port = port;
   memcpy(&ret.m_address.ipv6, address, sizeof(ret.m_address.ipv6));
 
@@ -45,7 +74,7 @@ size_t MappedAddressAttribute::serialize(std::span<uint8_t> target) const {
   std::memcpy(target.data() + offset, &port, sizeof(port));
   offset += sizeof(port);
 
-  if (m_family == AdressFamily::IPv4) {
+  if (m_family == AddressFamily::IPv4) {
     uint32_t address = htonl(m_address.ipv4);
     std::memcpy(target.data() + offset, &address, sizeof(address));
     offset += sizeof(address);
@@ -61,7 +90,7 @@ size_t MappedAddressAttribute::serialize(std::span<uint8_t> target) const {
   return offset;
 }
 
-AdressFamily MappedAddressAttribute::getFamily() const{
+AddressFamily MappedAddressAttribute::getFamily() const{
     return m_family;
 }
 
@@ -100,7 +129,7 @@ size_t XorMappedAddressAttribute::serialize(std::span<uint8_t> target) const {
   target[kPortOffset] ^= magic_cookie_bytes[0];
   target[kPortOffset + 1] ^= magic_cookie_bytes[1];
 
-  if (m_mapped_attribute.getFamily() == AdressFamily::IPv4) {
+  if (m_mapped_attribute.getFamily() == AddressFamily::IPv4) {
     for (size_t i = 0; i < sizeof(magic_cookie); ++i) {
       target[kAddressOffset + i] ^= magic_cookie_bytes[i];
     }
@@ -121,3 +150,4 @@ size_t XorMappedAddressAttribute::serialize(std::span<uint8_t> target) const {
 }
 
 } // namespace stun
+

@@ -1,17 +1,27 @@
 #pragma once
 
-#include "stun_message.hpp"
+#include <span>
 #include <netinet/in.h>
 
 namespace stun {
 
-enum class AdressFamily {
+enum class AddressFamily {
   IPv4 = 1,
   IPv6 = 2,
 };
 
+class StunAttribute {
+public:
+  uint16_t type;
+  uint16_t length;
+  std::vector<uint8_t> value;
+  
+  virtual size_t serialize(std::span<uint8_t> target) const;
+  virtual ~StunAttribute() = default;
+};
+
 class MappedAddressAttribute : public StunAttribute {
-  AdressFamily m_family;
+  AddressFamily m_family;
   uint16_t m_port;
   union {
     uint32_t ipv4;
@@ -19,7 +29,7 @@ class MappedAddressAttribute : public StunAttribute {
   } m_address;
 
 public:
-  AdressFamily getFamily() const;
+  AddressFamily getFamily() const;
   static MappedAddressAttribute create_v4(uint16_t port, uint32_t address);
   static MappedAddressAttribute create_v6(uint16_t port, uint32_t address[4]);
   size_t serialize(std::span<uint8_t> target) const override;
@@ -48,3 +58,4 @@ class FingerPrintAttribute : public StunAttribute {
 };
 
 } // namespace stun
+

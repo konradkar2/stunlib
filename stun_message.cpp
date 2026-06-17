@@ -99,35 +99,6 @@ size_t StunHeader::serialize(std::span<uint8_t> target) const {
   return offset;
 }
 
-size_t StunAttribute::serialize(std::span<uint8_t> target) const {
-  const size_t padded_length = (value.size() + 3) & ~size_t{3};
-  const size_t attribute_size = sizeof(type) + sizeof(length) + padded_length;
-
-  if (target.size() < attribute_size) {
-    throw std::runtime_error("invalid attribute size");
-  }
-
-  size_t offset = 0;
-
-  uint16_t encoded_type = htons(type);
-  std::memcpy(target.data() + offset, &encoded_type, sizeof(encoded_type));
-  offset += sizeof(encoded_type);
-
-  uint16_t encoded_length = htons(length);
-  std::memcpy(target.data() + offset, &encoded_length, sizeof(encoded_length));
-  offset += sizeof(encoded_length);
-
-  std::memcpy(target.data() + offset, value.data(), value.size());
-  offset += value.size();
-
-  if (padded_length > value.size()) {
-    std::memset(target.data() + offset, 0, padded_length - value.size());
-    offset += padded_length - value.size();
-  }
-
-  return offset;
-}
-
 StunMessage StunMessage::deserialize(std::span<const uint8_t> src) {
   if (src.size() < sizeof(StunHeaderRaw)) {
     throw std::runtime_error(
