@@ -15,7 +15,8 @@ public:
   uint16_t type;
   uint16_t length;
   std::vector<uint8_t> value;
-  
+
+
   virtual size_t serialize(std::span<uint8_t> target) const;
   virtual ~StunAttribute() = default;
 };

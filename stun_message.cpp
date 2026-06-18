@@ -1,4 +1,5 @@
 #include "stun_message.hpp"
+#include "stun_attribute_deserializer.hpp"
 #include <iostream>
 
 namespace stun {
@@ -71,7 +72,16 @@ void StunMessage::print() {
             << header.transaction_id[1] << std::setw(8) << std::setfill('0')
             << header.transaction_id[0] << std::endl;
   std::cout << "ATTRIBUTES\n";
-  // ToDo
+  for (const auto& attr : attributes) {
+    std::cout << "Type: 0x" << std::setw(2) << std::setfill('0') << attr->type << std::endl;
+    std::cout << "Length 0x" << std::setw(2) << std::setfill('0') << attr->length << std::endl;
+    std::cout << "Value {";
+    for (const auto& byte : attr->value) {
+        std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
+              << (static_cast<int>(byte)) << ", ";
+    }
+    std::cout << "}" << std::endl;
+  }
   std::cout << std::dec;
 }
 
@@ -131,7 +141,7 @@ StunMessage StunMessage::deserialize(std::span<const uint8_t> src) {
         std::format("excpected message size is {}", expected_message_size,
                     ", but actual size is {}", src.size()));
   }
-
+  msg.attributes = StunAttributeDeserializer::deserialize(src.subspan(kStunHeaderSize));
   return msg;
 }
 
@@ -141,7 +151,7 @@ size_t StunMessage::serialize(std::span<uint8_t> target) const {
   offset += header.serialize(target.subspan(offset));
 
   for (const auto &attr : attributes) {
-    offset += attr.serialize(target.subspan(offset));
+    offset += attr->serialize(target.subspan(offset));
   }
 
   return offset;

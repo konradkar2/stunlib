@@ -42,7 +42,7 @@ struct StunHeader {
 
 struct StunMessage {
   StunHeader header;
-  std::vector<StunAttribute> attributes;
+  std::vector<std::unique_ptr<StunAttribute>> attributes;
 
   static StunMessage deserialize(std::span<const uint8_t> src);
   size_t serialize(std::span<uint8_t> target) const;
