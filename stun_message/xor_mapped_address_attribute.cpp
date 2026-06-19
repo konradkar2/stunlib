@@ -26,8 +26,8 @@ XorMappedAddressAttribute XorMappedAddressAttribute::create_v6(uint16_t port, ui
   return ret;
 }
 
-uint16_t XorMappedAddressAttribute::get_type() const {
-  return static_cast<uint16_t>(AttributeTypeId::XorMappingAddress);
+AttributeTypeId XorMappedAddressAttribute::get_type() const {
+  return AttributeTypeId::XorMappingAddress;
 }
 
 uint16_t XorMappedAddressAttribute::get_length() const {

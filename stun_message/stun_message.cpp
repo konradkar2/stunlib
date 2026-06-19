@@ -73,7 +73,8 @@ void StunMessage::print() {
             << header.transaction_id[0] << std::endl;
   std::cout << "ATTRIBUTES\n";
   for (const auto& attr : attributes) {
-    std::cout << "Type: 0x" << std::setw(2) << std::setfill('0') << attr->get_type() << std::endl;
+    std::cout << "Type: 0x" << std::setw(2) << std::setfill('0')
+            << static_cast<uint16_t>(attr->get_type()) << " (" << attr->get_type() << ")" << std::endl;
     std::cout << "Length 0x" << std::setw(2) << std::setfill('0') << attr->get_length() << std::endl;
     std::cout << "Value {\n";
     attr->print_value();

@@ -2,8 +2,8 @@
 
 namespace stun {
 
-uint16_t ErrorCodeAttribute::get_type() const {
-  return static_cast<uint16_t>(AttributeTypeId::ErrorCode);
+AttributeTypeId ErrorCodeAttribute::get_type() const {
+  return AttributeTypeId::ErrorCode;
 }
 
 uint16_t ErrorCodeAttribute::get_length() const {

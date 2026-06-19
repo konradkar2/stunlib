@@ -24,8 +24,8 @@ MappedAddressAttribute MappedAddressAttribute::create_v6(uint16_t port,
   return ret;
 }
 
-uint16_t MappedAddressAttribute::get_type() const {
-  return static_cast<uint16_t>(AttributeTypeId::MappingAddress);
+AttributeTypeId MappedAddressAttribute::get_type() const {
+  return AttributeTypeId::MappingAddress;
 }
 
 uint16_t MappedAddressAttribute::get_length() const {

@@ -2,8 +2,8 @@
 
 namespace stun {
 
-uint16_t FingerPrintAttribute::get_type() const {
-  return static_cast<uint16_t>(AttributeTypeId::FingerPrint);
+AttributeTypeId FingerPrintAttribute::get_type() const {
+  return AttributeTypeId::FingerPrint;
 }
 
 uint16_t FingerPrintAttribute::get_length() const {
