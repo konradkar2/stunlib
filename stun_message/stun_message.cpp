@@ -75,7 +75,8 @@ void StunMessage::print() {
   for (const auto& attr : attributes) {
     std::cout << "Type: 0x" << std::setw(2) << std::setfill('0') << attr->get_type() << std::endl;
     std::cout << "Length 0x" << std::setw(2) << std::setfill('0') << attr->get_length() << std::endl;
-    std::cout << "Value {";
+    std::cout << "Value {\n";
+    attr->print_value();
     std::cout << "}" << std::endl;
   }
   std::cout << std::dec;

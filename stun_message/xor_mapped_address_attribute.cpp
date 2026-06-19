@@ -1,4 +1,6 @@
 #include "xor_mapped_address_attribute.hpp"
+#include <iostream>
+#include <arpa/inet.h>
 
 namespace stun {
 
@@ -43,7 +45,7 @@ void XorMappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
     m_xaddress.ipv4 = ntohs(addres_raw);
   }
   else {
-
+    //TODO IPv6
   }
 }
 
@@ -78,6 +80,23 @@ size_t XorMappedAddressAttribute::serialize(std::span<uint8_t> target) const {
   }
 
   return size;
+}
+
+void XorMappedAddressAttribute::print_value() const {
+  std::cout << "family: ";
+  if (m_family == AddressFamily::IPv4) {
+    std::cout << "IPv4\n";
+  } else {
+    std::cout << "IPv6\n";
+  }
+
+  std::cout << "xport: 0x" << m_xport << '\n';
+
+  if (m_family == AddressFamily::IPv4) {
+    std::cout << "xaddress: 0x" << std::setw(8) << std::setfill('0') << m_xaddress.ipv4 << std::endl;
+  } else {
+    //TODO
+  }
 }
 
 } // namespace stun
