@@ -71,4 +71,8 @@ AddressFamily MappedAddressAttribute::get_family() const{
     return m_family;
 }
 
+void MappedAddressAttribute::print_value() const {
+  //TODO
+}
+
 } // namespace stun
