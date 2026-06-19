@@ -1,5 +1,7 @@
-#include "stun_attributes.hpp"
+#include "stun_attribute.hpp"
 #include "stun_message.hpp"
+#include "mapped_address_attribute.hpp"
+#include "xor_mapped_address_attribute.hpp"
 
 #include <array>
 #include <cstdint>
