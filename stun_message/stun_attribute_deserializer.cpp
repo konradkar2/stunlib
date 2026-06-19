@@ -27,8 +27,26 @@ std::vector<std::unique_ptr<StunAttribute>> StunAttributeDeserializer::deseriali
     typeId = static_cast<AttributeTypeId>(ntohs(raw));
     
     switch (typeId) {
+      case AttributeTypeId::MappingAddress: {
+        auto new_attr = std::make_unique<MappedAddressAttribute>();
+        new_attr->deserialize(attr.subspan(k_type_length_size));
+        result.push_back(std::move(new_attr));
+        break;
+      }
+      case AttributeTypeId::ErrorCode: {
+        auto new_attr = std::make_unique<ErrorCodeAttribute>();
+        new_attr->deserialize(attr.subspan(k_type_length_size));
+        result.push_back(std::move(new_attr));
+        break;
+      }
       case AttributeTypeId::XorMappingAddress: {
         auto new_attr = std::make_unique<XorMappedAddressAttribute>();
+        new_attr->deserialize(attr.subspan(k_type_length_size));
+        result.push_back(std::move(new_attr));
+        break;
+      }
+      case AttributeTypeId::FingerPrint: {
+        auto new_attr = std::make_unique<FingerPrintAttribute>();
         new_attr->deserialize(attr.subspan(k_type_length_size));
         result.push_back(std::move(new_attr));
         break;

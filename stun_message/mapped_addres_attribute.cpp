@@ -29,7 +29,7 @@ AttributeTypeId MappedAddressAttribute::get_type() const {
 }
 
 uint16_t MappedAddressAttribute::get_length() const {
-  return 4 + (get_family() == AddressFamily::IPv4 ? 1 : 4);
+  return 4 + (get_family() == AddressFamily::IPv4 ? sizeof(AddressFamily::IPv4) : sizeof(AddressFamily::IPv6));
 }
 
 void MappedAddressAttribute::deserialize(std::span<const uint8_t> source) {

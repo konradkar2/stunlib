@@ -14,7 +14,7 @@ XorMappedAddressAttribute XorMappedAddressAttribute::create_v4(uint16_t port, ui
 
   ret.m_magic_cookie = magic_cookie;
   ret.m_family = AddressFamily::IPv4;
-  ret.m_xport = port;
+  ret.m_xport = port ^ static_cast<uint16_t>(magic_cookie >> 16);
   ret.m_xaddress.ipv4 = address ^ magic_cookie;
                                             
   return ret;
@@ -46,7 +46,7 @@ AttributeTypeId XorMappedAddressAttribute::get_type() const {
 }
 
 uint16_t XorMappedAddressAttribute::get_length() const {
-  return 4 + (get_family() == AddressFamily::IPv4 ? 1 : 4);
+  return 4 + (get_family() == AddressFamily::IPv4 ? sizeof(AddressFamily::IPv4) : sizeof(AddressFamily::IPv6));
 }
 
 void XorMappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
@@ -57,7 +57,7 @@ void XorMappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
   if (m_family == AddressFamily::IPv4) {
     uint32_t addres_raw;
     std::memcpy(&addres_raw, source.data() + 4, 4);
-    m_xaddress.ipv4 = ntohs(addres_raw);
+    m_xaddress.ipv4 = ntohl(addres_raw);
   }
   else {
     //TODO IPv6

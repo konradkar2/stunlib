@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stun_attribute.hpp"
-#include "mapped_address_attribute.hpp"
 
 namespace stun {
 
