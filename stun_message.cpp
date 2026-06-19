@@ -73,13 +73,9 @@ void StunMessage::print() {
             << header.transaction_id[0] << std::endl;
   std::cout << "ATTRIBUTES\n";
   for (const auto& attr : attributes) {
-    std::cout << "Type: 0x" << std::setw(2) << std::setfill('0') << attr->type << std::endl;
-    std::cout << "Length 0x" << std::setw(2) << std::setfill('0') << attr->length << std::endl;
+    std::cout << "Type: 0x" << std::setw(2) << std::setfill('0') << attr->get_type() << std::endl;
+    std::cout << "Length 0x" << std::setw(2) << std::setfill('0') << attr->get_length() << std::endl;
     std::cout << "Value {";
-    for (const auto& byte : attr->value) {
-        std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
-              << (static_cast<int>(byte)) << ", ";
-    }
     std::cout << "}" << std::endl;
   }
   std::cout << std::dec;
