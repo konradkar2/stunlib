@@ -17,7 +17,7 @@ MappedAddressAttribute MappedAddressAttribute::create_v6(uint16_t port,
                                                          uint32_t address[4]) {
   MappedAddressAttribute ret{};
 
- ret.m_family = AddressFamily::IPv6;
+  ret.m_family = AddressFamily::IPv6;
   ret.m_port = port;
   memcpy(&ret.m_address.ipv6, address, sizeof(ret.m_address.ipv6));
 

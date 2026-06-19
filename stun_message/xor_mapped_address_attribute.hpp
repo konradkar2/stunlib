@@ -13,11 +13,11 @@ class XorMappedAddressAttribute : public StunAttribute {
     uint32_t ipv6[4];
   } m_xaddress;
 
-  MappedAddressAttribute m_mapped_attribute;
   uint32_t m_magic_cookie;
   uint32_t m_transaction_id[3];
 
 public:
+  AddressFamily get_family() const;
   static XorMappedAddressAttribute create_v4(uint16_t port, uint32_t address,
                                           uint32_t magic_cookie);
   static XorMappedAddressAttribute create_v6(uint16_t port, uint32_t address[4],
