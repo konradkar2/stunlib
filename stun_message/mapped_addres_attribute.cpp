@@ -1,4 +1,5 @@
 #include "mapped_address_attribute.hpp"
+#include <iostream>
 
 namespace stun {
 
@@ -34,6 +35,21 @@ uint16_t MappedAddressAttribute::get_length() const {
 
 void MappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
   std::memcpy(&m_family, source.data() + 1, 1);
+  uint16_t xport_raw;
+  std::memcpy(&xport_raw, source.data() + 2, 2);
+  m_port = ntohs(xport_raw);
+  if (m_family == AddressFamily::IPv4) {
+    uint32_t addres_raw;
+    std::memcpy(&addres_raw, source.data() + 4, 4);
+    m_address.ipv4 = ntohl(addres_raw);
+  }
+  else if (m_family == AddressFamily::IPv6) {
+    uint32_t address_raw[4] = {};
+    std::memcpy(&address_raw, source.data() + 4, 16);
+    for (size_t i = 0; i < sizeof(m_address.ipv6); ++i) {
+      m_address.ipv6[i] = ntohl(address_raw[i]);
+    }
+  }
 }
 
 size_t MappedAddressAttribute::serialize(std::span<uint8_t> target) const {
@@ -72,7 +88,26 @@ AddressFamily MappedAddressAttribute::get_family() const{
 }
 
 void MappedAddressAttribute::print_value() const {
-  //TODO
+  std::cout << "family: ";
+  if (m_family == AddressFamily::IPv4) {
+    std::cout << "IPv4\n";
+  } 
+  else if (m_family == AddressFamily::IPv6) {
+    std::cout << "IPv6\n";
+  }
+
+  std::cout << "xport: 0x" << m_port << '\n';
+
+  if (m_family == AddressFamily::IPv4) {
+    std::cout << "xaddress: 0x" << std::setw(8) << std::setfill('0') << m_address.ipv4 << std::endl;
+  } 
+  else if (m_family == AddressFamily::IPv6) {
+    std::cout << "xaddress: 0x";
+    for (size_t i = 0; i < sizeof(m_address.ipv6); i++) {
+      std::cout << std::setw(8) << std::setfill('0') << m_address.ipv6[i];
+    }
+    std::cout << std::endl;
+  }
 }
 
 } // namespace stun
