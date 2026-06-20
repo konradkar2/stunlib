@@ -47,6 +47,14 @@ size_t ErrorCodeAttribute::serialize(std::span<uint8_t> target) const {
   std::memcpy(target.data() + offset, m_reason_phrase.data(), m_reason_phrase.size());
   offset += m_reason_phrase.size();
 
+  size_t raw_length = 4 + m_reason_phrase.size();
+  size_t padded_length = (raw_length + 3) & ~static_cast<size_t>(3);
+  size_t padding_needed = padded_length - raw_length;
+  if (padding_needed) {
+    std::memset(target.data() + offset, 0, padding_needed);
+    offset += padding_needed;
+  }
+
   return offset;
 }
 
