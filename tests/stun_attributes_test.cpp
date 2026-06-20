@@ -3,6 +3,8 @@
 #include "mapped_address_attribute.hpp"
 #include "xor_mapped_address_attribute.hpp"
 #include "error_code_attribute.hpp"
+#include "finger_print_attribute.hpp"
+#include <arpa/inet.h>
 
 #include <array>
 #include <cstdint>
@@ -62,6 +64,24 @@ TEST(ErrorCodeAttribute, SerializesValue) {
   const size_t size = attr.serialize(buffer);
 
   const std::array<uint8_t, 8> expected{0x00, 0x00, 0x04, 0x04, 'T', 'e', 's', 't'};
+  EXPECT_EQ(size, expected.size());
+  EXPECT_EQ(buffer, expected);
+}
+
+TEST(FingerPrintAttribute, ComputesAndSerializes) {
+  std::array<uint8_t, 8> message{0x01, 0x02, 0x03, 0x04,
+                                 0x05, 0x06, 0x07, 0x08};
+
+  stun::FingerPrintAttribute attr;
+  const uint32_t fp = attr.compute_finger_print(message);
+
+  std::array<uint8_t, 4> buffer{};
+  const size_t size = attr.serialize(buffer);
+
+  uint32_t net = htonl(fp);
+  std::array<uint8_t, 4> expected;
+  std::memcpy(expected.data(), &net, 4);
+
   EXPECT_EQ(size, expected.size());
   EXPECT_EQ(buffer, expected);
 }
