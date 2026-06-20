@@ -7,6 +7,7 @@
 #include <span>
 #include <vector>
 #include <cstdlib>
+#include "stun_attribute.hpp"
 
 namespace stun {
 
@@ -39,18 +40,9 @@ struct StunHeader {
   size_t serialize(std::span<uint8_t> target) const;
 };
 
-struct StunAttribute {
-  uint16_t type;
-  uint16_t length;
-  std::vector<uint8_t> value;
-
-  virtual size_t serialize(std::span<uint8_t> target) const;
-  virtual ~StunAttribute() = default;
-};
-
 struct StunMessage {
   StunHeader header;
-  std::vector<StunAttribute> attributes;
+  std::vector<std::unique_ptr<StunAttribute>> attributes;
 
   static StunMessage deserialize(std::span<const uint8_t> src);
   size_t serialize(std::span<uint8_t> target) const;

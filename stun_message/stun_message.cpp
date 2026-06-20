@@ -1,4 +1,5 @@
 #include "stun_message.hpp"
+#include "stun_attribute_deserializer.hpp"
 #include <iostream>
 
 namespace stun {
@@ -71,7 +72,14 @@ void StunMessage::print() {
             << header.transaction_id[1] << std::setw(8) << std::setfill('0')
             << header.transaction_id[0] << std::endl;
   std::cout << "ATTRIBUTES\n";
-  // ToDo
+  for (const auto& attr : attributes) {
+    std::cout << "Type: 0x" << std::setw(2) << std::setfill('0')
+            << static_cast<uint16_t>(attr->get_type()) << " (" << attr->get_type() << ")" << std::endl;
+    std::cout << "Length 0x" << std::setw(2) << std::setfill('0') << attr->get_length() << std::endl;
+    std::cout << "Value {\n";
+    attr->print_value();
+    std::cout << "}" << std::endl;
+  }
   std::cout << std::dec;
 }
 
@@ -95,35 +103,6 @@ size_t StunHeader::serialize(std::span<uint8_t> target) const {
 
   std::memcpy(target.data() + offset, transaction_id, sizeof(transaction_id));
   offset += sizeof(transaction_id);
-
-  return offset;
-}
-
-size_t StunAttribute::serialize(std::span<uint8_t> target) const {
-  const size_t padded_length = (value.size() + 3) & ~size_t{3};
-  const size_t attribute_size = sizeof(type) + sizeof(length) + padded_length;
-
-  if (target.size() < attribute_size) {
-    throw std::runtime_error("invalid attribute size");
-  }
-
-  size_t offset = 0;
-
-  uint16_t encoded_type = htons(type);
-  std::memcpy(target.data() + offset, &encoded_type, sizeof(encoded_type));
-  offset += sizeof(encoded_type);
-
-  uint16_t encoded_length = htons(length);
-  std::memcpy(target.data() + offset, &encoded_length, sizeof(encoded_length));
-  offset += sizeof(encoded_length);
-
-  std::memcpy(target.data() + offset, value.data(), value.size());
-  offset += value.size();
-
-  if (padded_length > value.size()) {
-    std::memset(target.data() + offset, 0, padded_length - value.size());
-    offset += padded_length - value.size();
-  }
 
   return offset;
 }
@@ -160,7 +139,7 @@ StunMessage StunMessage::deserialize(std::span<const uint8_t> src) {
         std::format("excpected message size is {}", expected_message_size,
                     ", but actual size is {}", src.size()));
   }
-
+  msg.attributes = StunAttributeDeserializer::deserialize(src.subspan(kStunHeaderSize));
   return msg;
 }
 
@@ -170,7 +149,7 @@ size_t StunMessage::serialize(std::span<uint8_t> target) const {
   offset += header.serialize(target.subspan(offset));
 
   for (const auto &attr : attributes) {
-    offset += attr.serialize(target.subspan(offset));
+    offset += attr->serialize(target.subspan(offset));
   }
 
   return offset;
