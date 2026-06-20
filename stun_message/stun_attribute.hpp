@@ -3,6 +3,7 @@
 #include <span>
 #include <netinet/in.h>
 #include <iomanip>
+#include <iostream>
 
 namespace stun {
 
