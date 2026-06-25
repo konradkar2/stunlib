@@ -8,7 +8,7 @@ class FingerPrintAttribute : public StunAttribute {
   static constexpr uint32_t k_fp_const = 0x5354554e;
   uint32_t m_finger_print;
 public:
-  AttributeTypeId get_type() const override;
+  FingerPrintAttribute() : StunAttribute(AttributeTypeId::FingerPrint) {}
   uint16_t get_length() const override;
   void deserialize(std::span<const uint8_t> source) override;
   size_t serialize(std::span<uint8_t> target) const override;

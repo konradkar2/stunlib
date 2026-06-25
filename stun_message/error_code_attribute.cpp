@@ -10,10 +10,6 @@ ErrorCodeAttribute ErrorCodeAttribute::create_error(uint16_t error_code, const s
   return ret;
 }
 
-AttributeTypeId ErrorCodeAttribute::get_type() const {
-  return AttributeTypeId::ErrorCode;
-}
-
 uint16_t ErrorCodeAttribute::get_length() const {
   uint16_t length = 4 + m_reason_phrase.size();
   uint16_t length_padded = (length  + 3) & ~3;

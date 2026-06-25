@@ -25,10 +25,6 @@ MappedAddressAttribute MappedAddressAttribute::create_v6(uint16_t port,
   return ret;
 }
 
-AttributeTypeId MappedAddressAttribute::get_type() const {
-  return AttributeTypeId::MappingAddress;
-}
-
 uint16_t MappedAddressAttribute::get_length() const {
   return 4 + (get_family() == AddressFamily::IPv4 ? sizeof(AddressFamily::IPv4) : sizeof(AddressFamily::IPv6));
 }

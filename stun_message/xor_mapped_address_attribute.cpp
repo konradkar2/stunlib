@@ -41,10 +41,6 @@ XorMappedAddressAttribute XorMappedAddressAttribute::create_v6(uint16_t port, ui
   return ret;
 }
 
-AttributeTypeId XorMappedAddressAttribute::get_type() const {
-  return AttributeTypeId::XorMappingAddress;
-}
-
 uint16_t XorMappedAddressAttribute::get_length() const {
   return 4 + (get_family() == AddressFamily::IPv4 ? sizeof(AddressFamily::IPv4) : sizeof(AddressFamily::IPv6));
 }
