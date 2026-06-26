@@ -1,11 +1,22 @@
 #include "xor_mapped_address_attribute.hpp"
 #include <iostream>
-#include <arpa/inet.h>
 
 namespace stun {
 
 AddressFamily XorMappedAddressAttribute::get_family() const{
     return m_family;
+}
+
+uint32_t XorMappedAddressAttribute::get_ipv4_address() const {
+  assert(m_family == AddressFamily::IPv4);
+  return m_xaddress.ipv4 ^ m_magic_cookie;
+}
+
+
+std::array<uint32_t,4> XorMappedAddressAttribute::get_ipv6_address() const {
+  assert(m_family == AddressFamily::IPv6);
+  return {m_xaddress.ipv6[0] ^ m_magic_cookie, m_xaddress.ipv6[1] ^ m_transaction_id[0],
+            m_xaddress.ipv6[2] ^ m_transaction_id[1], m_xaddress.ipv6[3] ^ m_transaction_id[2]};
 }
 
 XorMappedAddressAttribute XorMappedAddressAttribute::create_v4(uint16_t port, uint32_t address,
@@ -39,6 +50,16 @@ XorMappedAddressAttribute XorMappedAddressAttribute::create_v6(uint16_t port, ui
                                   
                                             
   return ret;
+}
+
+void XorMappedAddressAttribute::set_magic_cookie(const uint32_t magic_cookie) {
+  m_magic_cookie = magic_cookie;
+}
+
+void XorMappedAddressAttribute::set_transaction_id(const uint32_t transaction_id[3]) {
+  for (size_t i = 0; i < 3; i++) {
+    m_transaction_id[i] = transaction_id[i];
+  }
 }
 
 uint16_t XorMappedAddressAttribute::get_length() const {
@@ -105,17 +126,34 @@ void XorMappedAddressAttribute::print_value() const {
     std::cout << "IPv6\n";
   }
 
-  std::cout << "xport: 0x" << m_xport << '\n';
+  std::cout << "xport: 0x" << m_xport << " (decoded) : 0x" << (m_xport ^ static_cast<uint16_t>(m_magic_cookie >> 16)) << std::endl;
 
   if (m_family == AddressFamily::IPv4) {
-    std::cout << "xaddress: 0x" << std::setw(8) << std::setfill('0') << m_xaddress.ipv4 << std::endl;
+    std::cout << "xaddress (XOR): 0x" << std::setw(8) << std::setfill('0') << std::hex << m_xaddress.ipv4 << std::dec;
+    uint32_t addr = get_ipv4_address();
+    std::cout << " (decoded): "
+              << ((addr >> 24) & 0xFF) << '.'
+              << ((addr >> 16) & 0xFF) << '.'
+              << ((addr >> 8) & 0xFF) << '.'
+              << (addr & 0xFF)
+              << std::endl;
   } 
   else if (m_family == AddressFamily::IPv6) {
-    std::cout << "xaddress: 0x";
+    auto ipv6_decoded = get_ipv6_address();
+    std::cout << "xaddress (XOR): 0x";
     for (size_t i = 0; i < sizeof(m_xaddress.ipv6); i++) {
-      std::cout << std::setw(8) << std::setfill('0') << m_xaddress.ipv6[i];
+      std::cout << std::setw(8) << std::setfill('0') << std::hex << m_xaddress.ipv6[i] << std::dec;
     }
-    std::cout << std::endl;
+    std::cout << " (decoded): ";
+    for (size_t i = 0; i < ipv6_decoded.size(); ++i) {
+      uint32_t word = ipv6_decoded[i];
+      std::cout << std::hex << std::setw(4) << std::setfill('0') << ((word >> 16) & 0xFFFF) << ':'
+                << std::setw(4) << std::setfill('0') << (word & 0xFFFF);
+      if (i + 1 < ipv6_decoded.size()) {
+        std::cout << ':';
+      }
+    }
+    std::cout << std::dec << std::endl;
   }
 }
 

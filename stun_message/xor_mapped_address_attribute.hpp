@@ -18,11 +18,15 @@ class XorMappedAddressAttribute : public StunAttribute {
 public:
   XorMappedAddressAttribute() : StunAttribute(AttributeTypeId::XorMappingAddress) {}
   AddressFamily get_family() const;
+  uint32_t get_ipv4_address() const;
+  std::array<uint32_t,4> get_ipv6_address() const;
   static XorMappedAddressAttribute create_v4(uint16_t port, uint32_t address,
                                           uint32_t magic_cookie);
   static XorMappedAddressAttribute create_v6(uint16_t port, uint32_t address[4],
                                           uint32_t magic_cookie,
                                           uint32_t transaction_id[3]);
+  void set_magic_cookie(const uint32_t magic_cookie);
+  void set_transaction_id(const uint32_t transaction_id[3]);                                        
   uint16_t get_length() const override;
   void deserialize(std::span<const uint8_t> source) override;
   size_t serialize(std::span<uint8_t> target) const override;

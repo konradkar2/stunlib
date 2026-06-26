@@ -16,7 +16,8 @@ std::vector<std::span<const uint8_t>> StunAttributeDeserializer::split_attribute
   return result;
 }
 
-std::vector<std::unique_ptr<StunAttribute>> StunAttributeDeserializer::deserialize(std::span<const uint8_t> serialized_data) {
+std::vector<std::unique_ptr<StunAttribute>> StunAttributeDeserializer::deserialize(std::span<const uint8_t> serialized_data, 
+                                                                                   const StunHeader& stun_header ) {
   std::vector<std::unique_ptr<StunAttribute>> result;
   auto attributes_vector = split_attributes(serialized_data);
 
@@ -42,6 +43,8 @@ std::vector<std::unique_ptr<StunAttribute>> StunAttributeDeserializer::deseriali
       case AttributeTypeId::XorMappingAddress: {
         auto new_attr = std::make_unique<XorMappedAddressAttribute>();
         new_attr->deserialize(attr.subspan(k_type_length_size));
+        new_attr->set_magic_cookie(stun_header.magic_cookie);
+        new_attr->set_transaction_id(stun_header.transaction_id);
         result.push_back(std::move(new_attr));
         break;
       }
