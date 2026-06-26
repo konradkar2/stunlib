@@ -139,7 +139,7 @@ StunMessage StunMessage::deserialize(std::span<const uint8_t> src) {
         std::format("excpected message size is {}", expected_message_size,
                     ", but actual size is {}", src.size()));
   }
-  msg.attributes = StunAttributeDeserializer::deserialize(src.subspan(kStunHeaderSize));
+  msg.attributes = StunAttributeDeserializer::deserialize(src.subspan(kStunHeaderSize), msg.header);
   return msg;
 }
 
