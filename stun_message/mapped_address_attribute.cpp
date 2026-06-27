@@ -1,5 +1,6 @@
 #include "mapped_address_attribute.hpp"
 #include <iostream>
+#include <cstring>
 
 namespace stun {
 

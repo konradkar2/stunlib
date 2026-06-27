@@ -1,6 +1,7 @@
 #include "stun_message.hpp"
 #include "stun_attribute_deserializer.hpp"
 #include <iostream>
+#include <format>
 
 namespace stun {
 

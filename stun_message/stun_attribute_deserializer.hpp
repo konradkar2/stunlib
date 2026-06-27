@@ -1,11 +1,7 @@
 #pragma once
 #include "stun_attribute.hpp"
 #include "stun_message.hpp"
-#include "xor_mapped_address_attribute.hpp"
-#include "mapped_address_attribute.hpp"
-#include "error_code_attribute.hpp"
-#include "finger_print_attribute.hpp"
-#include <iostream>
+#include <memory>
 
 namespace stun {
 

@@ -1,4 +1,9 @@
 #include "stun_attribute_deserializer.hpp"
+#include "error_code_attribute.hpp"
+#include "finger_print_attribute.hpp"
+#include "mapped_address_attribute.hpp"
+#include "xor_mapped_address_attribute.hpp"
+#include <memory>
 
 namespace stun {
 

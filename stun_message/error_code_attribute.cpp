@@ -1,4 +1,5 @@
 #include "error_code_attribute.hpp"
+#include <cstring>
 
 namespace stun {
 

@@ -1,6 +1,6 @@
 #include "xor_mapped_address_attribute.hpp"
 #include <iostream>
-
+#include <cstring>
 namespace stun {
 
 AddressFamily XorMappedAddressAttribute::get_family() const{
