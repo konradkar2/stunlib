@@ -24,4 +24,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE stun_lib)
 
 enable_testing()
 add_subdirectory(tests)
+add_subdirectory(client)
 add_subdirectory(stun_message)

@@ -146,7 +146,6 @@ StunMessage StunMessage::deserialize(std::span<const uint8_t> src) {
 
 size_t StunMessage::serialize(std::span<uint8_t> target) const {
   size_t offset = 0;
-
   offset += header.serialize(target.subspan(offset));
 
   for (const auto &attr : attributes) {
