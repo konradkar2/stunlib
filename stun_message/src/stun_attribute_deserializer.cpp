@@ -1,30 +1,30 @@
-#include "stun_attribute_deserializer.hpp"
-#include "error_code_attribute.hpp"
-#include "finger_print_attribute.hpp"
-#include "mapped_address_attribute.hpp"
-#include "xor_mapped_address_attribute.hpp"
+#include "stun_message/stun_attribute_deserializer.hpp"
+#include "stun_message/error_code_attribute.hpp"
+#include "stun_message/finger_print_attribute.hpp"
+#include "stun_message/mapped_address_attribute.hpp"
+#include "stun_message/xor_mapped_address_attribute.hpp"
 #include <memory>
 
 namespace stun {
 
-std::vector<std::span<const uint8_t>> StunAttributeDeserializer::split_attributes(std::span<const uint8_t> serialized_data) {
-  std::vector<std::span<const uint8_t>> result;
+void StunAttributeDeserializer::split_attributes(std::span<const uint8_t> serialized_data,
+                                                 std::vector<std::span<const uint8_t>> &result) {
   size_t offset = 0;
   while (offset < serialized_data.size()) {
     uint16_t length_raw;
-    std::memcpy(&length_raw, serialized_data.data() + 2, 2);
-    uint16_t length;
-    length = ntohs(length_raw);
-    result.push_back(serialized_data.subspan(offset, offset + length + k_type_length_size));
-    offset += length + k_type_length_size;
+    std::memcpy(&length_raw, serialized_data.data() + offset + 2, 2);
+    uint16_t length = ntohs(length_raw);
+    const size_t padded_length = (length + 3) & ~static_cast<size_t>(3);
+    result.push_back(serialized_data.subspan(offset, k_type_length_size + length));
+    offset += k_type_length_size + padded_length;
   }
-  return result;
 }
 
 std::vector<std::unique_ptr<StunAttribute>> StunAttributeDeserializer::deserialize(std::span<const uint8_t> serialized_data, 
                                                                                    const StunHeader& stun_header ) {
   std::vector<std::unique_ptr<StunAttribute>> result;
-  auto attributes_vector = split_attributes(serialized_data);
+  std::vector<std::span<const uint8_t>> attributes_vector;
+  split_attributes(serialized_data, attributes_vector);
 
   for (const auto& attr : attributes_vector) {
     uint16_t raw;

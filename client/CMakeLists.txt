@@ -1,7 +1,17 @@
-target_sources(stun_lib PRIVATE
-    client.cpp
+add_executable(client)
+
+target_sources(client
+    PRIVATE
+        main.cpp
+        client.cpp
 )
 
-target_include_directories(stun_lib PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
+target_link_libraries(client
+    PRIVATE
+        stun_message
+)
+
+target_include_directories(client
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
 )

@@ -1,6 +1,8 @@
 #pragma once
 
-#include "stun_attribute.hpp"
+#include "stun_message/stun_attribute.hpp"
+#include <string>
+#include <utility>
 
 namespace stun {
 
@@ -9,6 +11,9 @@ class ErrorCodeAttribute : public StunAttribute {
   std::string m_reason_phrase;
 public:
   ErrorCodeAttribute() : StunAttribute(AttributeTypeId::ErrorCode) {}
+  ErrorCodeAttribute(uint16_t error_code, std::string phrase)
+      : StunAttribute(AttributeTypeId::ErrorCode), m_error_code(error_code),
+        m_reason_phrase(std::move(phrase)) {}
   static ErrorCodeAttribute create_error(uint16_t error_code, const std::string& phrase);
   uint16_t get_length() const override;
   void deserialize(std::span<const uint8_t> source) override;

@@ -1,20 +1,14 @@
-#include "error_code_attribute.hpp"
+#include "stun_message/error_code_attribute.hpp"
 #include <cstring>
 
 namespace stun {
 
 ErrorCodeAttribute ErrorCodeAttribute::create_error(uint16_t error_code, const std::string& phrase) {
-  ErrorCodeAttribute ret {};
-  ret.m_error_code = error_code;
-  ret.m_reason_phrase = phrase;
-
-  return ret;
+  return ErrorCodeAttribute(error_code, phrase);
 }
 
 uint16_t ErrorCodeAttribute::get_length() const {
-  uint16_t length = 4 + m_reason_phrase.size();
-  uint16_t length_padded = (length  + 3) & ~3;
-  return length_padded;
+  return static_cast<uint16_t>(4 + m_reason_phrase.size());
 }
 
 void ErrorCodeAttribute::deserialize(std::span<const uint8_t> source) {

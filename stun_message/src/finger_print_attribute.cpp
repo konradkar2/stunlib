@@ -1,4 +1,4 @@
-#include "finger_print_attribute.hpp"
+#include "stun_message/finger_print_attribute.hpp"
 #include <cstring>
 
 namespace stun {

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "stun_attribute.hpp"
+#include "stun_message/stun_attribute.hpp"
+#include <array>
 
 namespace stun {
 
@@ -22,9 +23,10 @@ public:
   std::array<uint32_t,4> get_ipv6_address() const;
   static XorMappedAddressAttribute create_v4(uint16_t port, uint32_t address,
                                           uint32_t magic_cookie);
-  static XorMappedAddressAttribute create_v6(uint16_t port, uint32_t address[4],
+  static XorMappedAddressAttribute create_v6(uint16_t port,
+                                          const uint32_t address[4],
                                           uint32_t magic_cookie,
-                                          uint32_t transaction_id[3]);
+                                          const uint32_t transaction_id[3]);
   void set_magic_cookie(const uint32_t magic_cookie);
   void set_transaction_id(const uint32_t transaction_id[3]);                                        
   uint16_t get_length() const override;

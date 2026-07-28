@@ -1,5 +1,5 @@
-#include "stun_message.hpp"
-#include "stun_attribute_deserializer.hpp"
+#include "stun_message/stun_message.hpp"
+#include "stun_message/stun_attribute_deserializer.hpp"
 #include <iostream>
 #include <format>
 
@@ -13,6 +13,14 @@ struct StunHeaderRaw {
 };
 
 static_assert(sizeof(StunHeaderRaw) == kStunHeaderSize);
+
+namespace {
+
+size_t padded_attribute_length(size_t length) {
+  return (length + 3) & ~static_cast<size_t>(3);
+}
+
+} // namespace
 
 uint16_t encode_message_type(StunMethod method, StunClass cls) {
   if (method != StunMethod::binding) {
@@ -146,9 +154,24 @@ StunMessage StunMessage::deserialize(std::span<const uint8_t> src) {
 
 size_t StunMessage::serialize(std::span<uint8_t> target) const {
   size_t offset = 0;
-  offset += header.serialize(target.subspan(offset));
+  StunHeader serialized_header = header;
+  serialized_header.message_length = 0;
+  for (const auto &attr : attributes) {
+    serialized_header.message_length += static_cast<uint16_t>(
+        sizeof(uint16_t) + sizeof(uint16_t) + padded_attribute_length(attr->get_length()));
+  }
+
+  offset += serialized_header.serialize(target.subspan(offset));
 
   for (const auto &attr : attributes) {
+    uint16_t type = htons(static_cast<uint16_t>(attr->get_type()));
+    std::memcpy(target.data() + offset, &type, sizeof(type));
+    offset += sizeof(type);
+
+    uint16_t length = htons(attr->get_length());
+    std::memcpy(target.data() + offset, &length, sizeof(length));
+    offset += sizeof(length);
+
     offset += attr->serialize(target.subspan(offset));
   }
 

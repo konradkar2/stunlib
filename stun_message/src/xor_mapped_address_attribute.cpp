@@ -1,6 +1,7 @@
-#include "xor_mapped_address_attribute.hpp"
+#include "stun_message/xor_mapped_address_attribute.hpp"
 #include <iostream>
 #include <cstring>
+#include <iterator>
 namespace stun {
 
 AddressFamily XorMappedAddressAttribute::get_family() const{
@@ -31,9 +32,9 @@ XorMappedAddressAttribute XorMappedAddressAttribute::create_v4(uint16_t port, ui
   return ret;
 }
 
-XorMappedAddressAttribute XorMappedAddressAttribute::create_v6(uint16_t port, uint32_t address[4],
+XorMappedAddressAttribute XorMappedAddressAttribute::create_v6(uint16_t port, const uint32_t address[4],
                                           uint32_t magic_cookie,
-                                          uint32_t transaction_id[3]) {
+                                          const uint32_t transaction_id[3]) {
   XorMappedAddressAttribute ret{};
 
   ret.m_magic_cookie = magic_cookie;
@@ -63,11 +64,13 @@ void XorMappedAddressAttribute::set_transaction_id(const uint32_t transaction_id
 }
 
 uint16_t XorMappedAddressAttribute::get_length() const {
-  return 4 + (get_family() == AddressFamily::IPv4 ? sizeof(AddressFamily::IPv4) : sizeof(AddressFamily::IPv6));
+  return static_cast<uint16_t>(4 + (get_family() == AddressFamily::IPv4 ? sizeof(m_xaddress.ipv4) : sizeof(m_xaddress.ipv6)));
 }
 
 void XorMappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
-  std::memcpy(&m_family, source.data() + 1, 1);
+  uint8_t family;
+  std::memcpy(&family, source.data() + 1, 1);
+  m_family = static_cast<AddressFamily>(family);
   uint16_t xport_raw;
   std::memcpy(&xport_raw, source.data() + 2, 2);
   m_xport = ntohs(xport_raw);
@@ -79,7 +82,7 @@ void XorMappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
   else if (m_family == AddressFamily::IPv6) {
     uint32_t address_raw[4] = {};
     std::memcpy(&address_raw, source.data() + 4, 16);
-    for (size_t i = 0; i < sizeof(m_xaddress.ipv6); ++i) {
+    for (size_t i = 0; i < std::size(m_xaddress.ipv6); ++i) {
       m_xaddress.ipv6[i] = ntohl(address_raw[i]);
     }
   }
@@ -107,7 +110,7 @@ size_t XorMappedAddressAttribute::serialize(std::span<uint8_t> target) const {
   } 
   else if (m_family == AddressFamily::IPv6) {
     uint32_t address[4] = {};
-    for (size_t i = 0; i < sizeof(m_xaddress.ipv6); ++i) {
+    for (size_t i = 0; i < std::size(m_xaddress.ipv6); ++i) {
       address[i] = htonl(m_xaddress.ipv6[i]);
     }
     std::memcpy(target.data() + offset, &address, sizeof(address));
@@ -141,7 +144,7 @@ void XorMappedAddressAttribute::print_value() const {
   else if (m_family == AddressFamily::IPv6) {
     auto ipv6_decoded = get_ipv6_address();
     std::cout << "xaddress (XOR): 0x";
-    for (size_t i = 0; i < sizeof(m_xaddress.ipv6); i++) {
+    for (size_t i = 0; i < std::size(m_xaddress.ipv6); i++) {
       std::cout << std::setw(8) << std::setfill('0') << std::hex << m_xaddress.ipv6[i] << std::dec;
     }
     std::cout << " (decoded): ";

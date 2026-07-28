@@ -1,28 +1,35 @@
 cmake_minimum_required(VERSION 3.15)
+
 project(stun LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(STUN_ENABLE_COVERAGE "Build with coverage instrumentation" OFF)
+
 add_compile_options(
--Wall
--Wextra
--Wpedantic
-#-Wconversion
--Wshadow
--Wformat=2
--Wnull-dereference
--Werror
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wshadow
+    -Wformat=2
+    -Wnull-dereference
+    -Werror
 )
 
-add_library(stun_lib)
-target_include_directories(stun_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+if(STUN_ENABLE_COVERAGE)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-O0 -g --coverage)
+        add_link_options(--coverage)
+    else()
+        message(FATAL_ERROR "STUN_ENABLE_COVERAGE is supported only with GNU or Clang")
+    endif()
+endif()
 
-add_executable(${PROJECT_NAME} main.cpp )
-target_link_libraries(${PROJECT_NAME} PRIVATE stun_lib)
+add_subdirectory(stun_message)
+add_subdirectory(client)
 
 enable_testing()
 add_subdirectory(tests)
-add_subdirectory(client)
-add_subdirectory(stun_message)

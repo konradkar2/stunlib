@@ -1,5 +1,5 @@
 #pragma once
-#include "stun_attribute.hpp"
+#include "stun_message/stun_attribute.hpp"
 #include <cstdint>
 #include <cstring>
 
@@ -28,7 +28,7 @@ enum class StunClass {
   error_response = 3
 };
 
-std::ostream& operator<<(std::ostream& os, StunMethod cclass);
+std::ostream& operator<<(std::ostream& os, StunClass cclass);
 
 struct StunHeader {
   StunMethod method;

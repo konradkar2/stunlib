@@ -1,6 +1,7 @@
 #pragma once
 
-#include "stun_attribute.hpp"
+#include "stun_message/stun_attribute.hpp"
+#include <array>
 
 namespace stun {
 
@@ -18,7 +19,8 @@ public:
   uint32_t get_ipv4_address() const;
   std::array<uint32_t,4> get_ipv6_address() const;
   static MappedAddressAttribute create_v4(uint16_t port, uint32_t address);
-  static MappedAddressAttribute create_v6(uint16_t port, uint32_t address[4]);
+  static MappedAddressAttribute create_v6(uint16_t port,
+                                          const uint32_t address[4]);
   uint16_t get_length() const override;
   void deserialize(std::span<const uint8_t> source) override;
   size_t serialize(std::span<uint8_t> target) const override;

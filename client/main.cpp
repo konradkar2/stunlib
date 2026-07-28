@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "stun_message.hpp"
+#include "stun_message/stun_message.hpp"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
