@@ -2,7 +2,7 @@
 #include <iostream>
 #include <arpa/inet.h>
 #include <netinet/in.h>
-#include "stun_message/stun_message.hpp"
+#include "stun_library/stun_message.hpp"
 #include <span>
 
 namespace stun {

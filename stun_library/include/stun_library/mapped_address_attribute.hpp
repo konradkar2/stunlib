@@ -1,7 +1,7 @@
 #pragma once
 
-#include "stun_message/ip_address.hpp"
-#include "stun_message/stun_attribute.hpp"
+#include "stun_library/ip_address.hpp"
+#include "stun_library/stun_attribute.hpp"
 #include <array>
 
 namespace stun {

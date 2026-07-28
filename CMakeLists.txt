@@ -28,7 +28,7 @@ if(STUN_ENABLE_COVERAGE)
     endif()
 endif()
 
-add_subdirectory(stun_message)
+add_subdirectory(stun_library)
 add_subdirectory(client)
 add_subdirectory(server)
 

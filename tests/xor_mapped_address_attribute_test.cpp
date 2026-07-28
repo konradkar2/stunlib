@@ -1,5 +1,5 @@
-#include "stun_message/xor_mapped_address_attribute.hpp"
-#include "stun_message/stun_message.hpp"
+#include "stun_library/xor_mapped_address_attribute.hpp"
+#include "stun_library/stun_message.hpp"
 
 #include <gtest/gtest.h>
 

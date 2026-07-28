@@ -32,16 +32,16 @@ target_link_libraries(your_target
 )
 ```
 
-Headers live under the `stun_message/` prefix:
+Headers live under the `stun_library/` prefix:
 
 ```cpp
-#include "stun_message/stun_message.hpp"
+#include "stun_library/stun_message.hpp"
 ```
 
 ## Basic message usage
 
 ```cpp
-#include "stun_message/stun_message.hpp"
+#include "stun_library/stun_message.hpp"
 
 #include <array>
 #include <cstdint>
@@ -82,7 +82,7 @@ If you want to do the socket part yourself, it looks roughly like this:
 
 ```cpp
 #include "client.hpp"
-#include "stun_message/stun_message.hpp"
+#include "stun_library/stun_message.hpp"
 
 #include <sys/socket.h>
 
@@ -99,8 +99,8 @@ To pull the mapped IP address out of the response, look for
 `XOR-MAPPED-ADDRESS` first. Most STUN servers return that one:
 
 ```cpp
-#include "stun_message/ip_address.hpp"
-#include "stun_message/xor_mapped_address_attribute.hpp"
+#include "stun_library/ip_address.hpp"
+#include "stun_library/xor_mapped_address_attribute.hpp"
 
 for (const auto &attr : response.attributes) {
   if (attr->get_type() != stun::AttributeTypeId::XorMappingAddress) {
@@ -140,8 +140,8 @@ If you build a response yourself, mapped attributes are created from an
 `IpAddress`:
 
 ```cpp
-#include "stun_message/ip_address.hpp"
-#include "stun_message/xor_mapped_address_attribute.hpp"
+#include "stun_library/ip_address.hpp"
+#include "stun_library/xor_mapped_address_attribute.hpp"
 
 auto attr = stun::XorMappedAddressAttribute::from_ip_address(
     client_port,
@@ -174,5 +174,5 @@ To calculate it locally:
 cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DSTUN_ENABLE_COVERAGE=ON
 cmake --build build-coverage --parallel
 ctest --test-dir build-coverage --output-on-failure
-gcovr --root . --filter 'stun_message/src/.*' --txt --print-summary
+gcovr --root . --filter 'stun_library/src/.*' --txt --print-summary
 ```

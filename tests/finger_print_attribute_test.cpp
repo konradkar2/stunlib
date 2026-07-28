@@ -1,4 +1,4 @@
-#include "stun_message/finger_print_attribute.hpp"
+#include "stun_library/finger_print_attribute.hpp"
 
 #include <arpa/inet.h>
 #include <gtest/gtest.h>

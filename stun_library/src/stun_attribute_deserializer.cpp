@@ -1,8 +1,8 @@
-#include "stun_message/stun_attribute_deserializer.hpp"
-#include "stun_message/error_code_attribute.hpp"
-#include "stun_message/finger_print_attribute.hpp"
-#include "stun_message/mapped_address_attribute.hpp"
-#include "stun_message/xor_mapped_address_attribute.hpp"
+#include "stun_library/stun_attribute_deserializer.hpp"
+#include "stun_library/error_code_attribute.hpp"
+#include "stun_library/finger_print_attribute.hpp"
+#include "stun_library/mapped_address_attribute.hpp"
+#include "stun_library/xor_mapped_address_attribute.hpp"
 #include <memory>
 
 namespace stun {

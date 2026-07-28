@@ -51,7 +51,7 @@ jobs:
         run: |
           gcovr \
             --root . \
-            --filter 'stun_message/src/.*' \
+            --filter 'stun_library/src/.*' \
             --txt coverage.txt \
             --xml-pretty \
             --xml coverage.xml \

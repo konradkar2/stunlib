@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stun_message/stun_attribute.hpp"
+#include "stun_library/stun_attribute.hpp"
 #include <string>
 #include <utility>
 

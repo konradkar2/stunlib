@@ -1,4 +1,4 @@
-#include "stun_message/ip_address.hpp"
+#include "stun_library/ip_address.hpp"
 
 #include <gtest/gtest.h>
 

@@ -1,4 +1,4 @@
-#include "stun_message/mapped_address_attribute.hpp"
+#include "stun_library/mapped_address_attribute.hpp"
 
 #include <gtest/gtest.h>
 

@@ -7,9 +7,9 @@
 #include <stdexcept>
 #include <string>
 
-#include "stun_message/mapped_address_attribute.hpp"
-#include "stun_message/stun_message.hpp"
-#include "stun_message/xor_mapped_address_attribute.hpp"
+#include "stun_library/mapped_address_attribute.hpp"
+#include "stun_library/stun_message.hpp"
+#include "stun_library/xor_mapped_address_attribute.hpp"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>

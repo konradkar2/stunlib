@@ -1,4 +1,4 @@
-#include "stun_message/xor_mapped_address_attribute.hpp"
+#include "stun_library/xor_mapped_address_attribute.hpp"
 #include <iostream>
 #include <cstring>
 #include <iterator>

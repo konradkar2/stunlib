@@ -1,5 +1,5 @@
-#include "stun_message/stun_message.hpp"
-#include "stun_message/stun_attribute_deserializer.hpp"
+#include "stun_library/stun_message.hpp"
+#include "stun_library/stun_attribute_deserializer.hpp"
 #include <iostream>
 #include <format>
 
