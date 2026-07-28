@@ -1,6 +1,20 @@
 #include "client.hpp"
 
+#include <cerrno>
+#include <cstring>
+#include <stdexcept>
+#include <string>
+
 namespace stun {
+
+namespace {
+
+std::string errno_message(const std::string &message, int error_number) {
+  return message + ": " + std::strerror(error_number) + " (errno " +
+         std::to_string(error_number) + ")";
+}
+
+} // namespace
 
 void StunClient::send(int fd, std::span<const uint8_t> data) {
   sockaddr_in servaddr{};
@@ -17,7 +31,7 @@ void StunClient::send(int fd, std::span<const uint8_t> data) {
   ssize_t ret = sendto(fd, data.data(), data.size(), 0, (sockaddr *)&servaddr,
                        sizeof(servaddr));
   if (ret < 0) {
-    throw std::runtime_error("error during sendind data");
+    throw std::runtime_error(errno_message("error during sending data", errno));
   }
 }
 
@@ -34,12 +48,11 @@ void StunClient::send(int fd, const StunMessage& message) {
   servaddr.sin_port = htons(m_server_port);
   
   uint8_t data[kBufferSize];
-  std::cout << "XD\n";
   size_t size = message.serialize(std::span{data, sizeof(data)});
   ssize_t ret = sendto(fd, data, size, 0, (sockaddr *)&servaddr,
                        sizeof(servaddr));
   if (ret < 0) {
-    throw std::runtime_error("error during sendind data");
+    throw std::runtime_error(errno_message("error during sending data", errno));
   }
 }
 
@@ -53,7 +66,7 @@ StunMessage StunClient::receive(int fd) {
                                       &response_addr, &response_addr_len);
 
   if (received_n_bytes < 0) {
-    throw std::runtime_error("error during receiving data");
+    throw std::runtime_error(errno_message("error during receiving data", errno));
   }
 
   StunMessage response = StunMessage::deserialize(

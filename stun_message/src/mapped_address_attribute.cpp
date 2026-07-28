@@ -4,132 +4,126 @@
 #include <iterator>
 
 namespace stun {
+namespace {
 
-MappedAddressAttribute MappedAddressAttribute::create_v4(uint16_t port,
-                                                         uint32_t address) {
+constexpr size_t kReservedOffset = 0;
+constexpr size_t kFamilyOffset = 1;
+constexpr size_t kPortOffset = 2;
+constexpr size_t kAddressOffset = 4;
+constexpr size_t kMappedAddressHeaderLength = kAddressOffset;
+constexpr size_t kIpv4AddressLength = sizeof(uint32_t);
+constexpr size_t kIpv6AddressLength = sizeof(IpAddress::Ipv6Address);
+constexpr uint8_t kReservedValue = 0;
+
+} // namespace
+
+MappedAddressAttribute
+MappedAddressAttribute::from_ip_address(uint16_t port, IpAddress address) {
   MappedAddressAttribute ret{};
 
-  ret.m_family = AddressFamily::IPv4;
   ret.m_port = port;
-  ret.m_address.ipv4 = address;
-
-  return ret;
-}
-
-MappedAddressAttribute MappedAddressAttribute::create_v6(uint16_t port,
-                                                         const uint32_t address[4]) {
-  MappedAddressAttribute ret{};
-
-  ret.m_family = AddressFamily::IPv6;
-  ret.m_port = port;
-  memcpy(&ret.m_address.ipv6, address, sizeof(ret.m_address.ipv6));
+  ret.m_address = address;
 
   return ret;
 }
 
 uint16_t MappedAddressAttribute::get_length() const {
-  return static_cast<uint16_t>(4 + (get_family() == AddressFamily::IPv4 ? sizeof(m_address.ipv4) : sizeof(m_address.ipv6)));
+  return static_cast<uint16_t>(
+      kMappedAddressHeaderLength +
+      (get_family() == AddressFamily::IPv4 ? kIpv4AddressLength
+                                           : kIpv6AddressLength));
 }
 
 void MappedAddressAttribute::deserialize(std::span<const uint8_t> source) {
   uint8_t family;
-  std::memcpy(&family, source.data() + 1, 1);
-  m_family = static_cast<AddressFamily>(family);
-  uint16_t xport_raw;
-  std::memcpy(&xport_raw, source.data() + 2, 2);
-  m_port = ntohs(xport_raw);
-  if (m_family == AddressFamily::IPv4) {
-    uint32_t addres_raw;
-    std::memcpy(&addres_raw, source.data() + 4, 4);
-    m_address.ipv4 = ntohl(addres_raw);
+  std::memcpy(&family, source.data() + kFamilyOffset, sizeof(family));
+  const auto address_family = static_cast<AddressFamily>(family);
+
+  uint16_t port_raw;
+  std::memcpy(&port_raw, source.data() + kPortOffset, sizeof(port_raw));
+  m_port = ntohs(port_raw);
+
+  if (address_family == AddressFamily::IPv4) {
+    uint32_t address_raw;
+    std::memcpy(&address_raw, source.data() + kAddressOffset,
+                sizeof(address_raw));
+    m_address = IpAddress::from_ipv4(ntohl(address_raw));
   }
-  else if (m_family == AddressFamily::IPv6) {
-    uint32_t address_raw[4] = {};
-    std::memcpy(&address_raw, source.data() + 4, 16);
-    for (size_t i = 0; i < std::size(m_address.ipv6); ++i) {
-      m_address.ipv6[i] = ntohl(address_raw[i]);
+  else if (address_family == AddressFamily::IPv6) {
+    IpAddress::Ipv6Address address_raw{};
+    std::memcpy(address_raw.data(), source.data() + kAddressOffset,
+                kIpv6AddressLength);
+
+    IpAddress::Ipv6Address address{};
+    for (size_t i = 0; i < address.size(); ++i) {
+      address[i] = ntohl(address_raw[i]);
     }
+    m_address = IpAddress::from_ipv6(address);
   }
 }
 
 size_t MappedAddressAttribute::serialize(std::span<uint8_t> target) const {
-  size_t offset = 0;
+  uint8_t reserved = kReservedValue;
+  std::memcpy(target.data() + kReservedOffset, &reserved, sizeof(reserved));
 
-  uint8_t padding = 0;
-  std::memcpy(target.data() + offset, &padding, sizeof(padding));
-  offset += sizeof(padding);
-
-  uint8_t family = static_cast<uint8_t>(m_family);
-  std::memcpy(target.data() + offset, &family, sizeof(family));
-  offset += sizeof(family);
+  uint8_t family = static_cast<uint8_t>(get_family());
+  std::memcpy(target.data() + kFamilyOffset, &family, sizeof(family));
 
   uint16_t port = htons(m_port);
-  std::memcpy(target.data() + offset, &port, sizeof(port));
-  offset += sizeof(port);
+  std::memcpy(target.data() + kPortOffset, &port, sizeof(port));
 
-  if (m_family == AddressFamily::IPv4) {
-    uint32_t address = htonl(m_address.ipv4);
-    std::memcpy(target.data() + offset, &address, sizeof(address));
-    offset += sizeof(address);
-  } else {
-    uint32_t address[4] = {};
-    for (size_t i = 0; i < std::size(m_address.ipv6); ++i) {
-      address[i] = htonl(m_address.ipv6[i]);
-    }
-    std::memcpy(target.data() + offset, &address, sizeof(address));
-    offset += sizeof(address);
+  if (get_family() == AddressFamily::IPv4) {
+    uint32_t address = htonl(m_address.ipv4());
+    std::memcpy(target.data() + kAddressOffset, &address, sizeof(address));
+    return kMappedAddressHeaderLength + kIpv4AddressLength;
   }
 
-  return offset;
+  const auto ipv6_address = m_address.ipv6();
+  IpAddress::Ipv6Address address{};
+  for (size_t i = 0; i < ipv6_address.size(); ++i) {
+    address[i] = htonl(ipv6_address[i]);
+  }
+  std::memcpy(target.data() + kAddressOffset, address.data(),
+              kIpv6AddressLength);
+  return kMappedAddressHeaderLength + kIpv6AddressLength;
 }
 
 AddressFamily MappedAddressAttribute::get_family() const{
-  return m_family;
+  return m_address.is_ipv4() ? AddressFamily::IPv4 : AddressFamily::IPv6;
 }
 
-uint32_t MappedAddressAttribute::get_ipv4_address() const {
-  assert(m_family == AddressFamily::IPv4);
-  return m_address.ipv4;
+uint16_t MappedAddressAttribute::get_port() const {
+  return m_port;
 }
 
-
-std::array<uint32_t,4> MappedAddressAttribute::get_ipv6_address() const {
-  assert(m_family == AddressFamily::IPv6);
-  return {m_address.ipv6[0], m_address.ipv6[1],
-            m_address.ipv6[2], m_address.ipv6[3]};
+IpAddress MappedAddressAttribute::get_ip_address() const {
+  return m_address;
 }
 
 void MappedAddressAttribute::print_value() const {
   std::cout << "family: ";
-  if (m_family == AddressFamily::IPv4) {
+  if (get_family() == AddressFamily::IPv4) {
     std::cout << "IPv4\n";
   } 
-  else if (m_family == AddressFamily::IPv6) {
+  else if (get_family() == AddressFamily::IPv6) {
     std::cout << "IPv6\n";
   }
 
   std::cout << "xport: 0x" << m_port << '\n';
 
-  if (m_family == AddressFamily::IPv4) {
-    std::cout << "address: 0x" << std::setw(8) << std::setfill('0') << m_address.ipv4 << " : ";
-    std::cout << " (decoded): "
-            << ((m_address.ipv4 >> 24) & 0xFF) << '.'
-            << ((m_address.ipv4 >> 16) & 0xFF) << '.'
-            << ((m_address.ipv4 >> 8) & 0xFF) << '.'
-            << (m_address.ipv4 & 0xFF)
-            << std::endl;
+  if (get_family() == AddressFamily::IPv4) {
+    const uint32_t address = m_address.ipv4();
+    std::cout << "address: 0x" << std::setw(8) << std::setfill('0')
+              << address << " : ";
+    std::cout << " (decoded): " << m_address << std::endl;
   } 
-  else if (m_family == AddressFamily::IPv6) {
+  else if (get_family() == AddressFamily::IPv6) {
+    const auto address = m_address.ipv6();
     std::cout << "address: 0x";
-    for (size_t i = 0; i < std::size(m_address.ipv6); i++) {
-      std::cout << std::setw(8) << std::setfill('0') << m_address.ipv6[i];
+    for (const uint32_t word : address) {
+      std::cout << std::setw(8) << std::setfill('0') << word;
     }
-    std::cout << " : ";
-    for (size_t i = 0; i < std::size(m_address.ipv6); ++i) {
-      uint32_t word = m_address.ipv6[i];
-      std::cout << std::hex << std::setw(4) << std::setfill('0') << ((word >> 16) & 0xFFFF) << ':'
-                << std::setw(4) << std::setfill('0') << (word & 0xFFFF);
-    }
+    std::cout << " : " << m_address;
     std::cout << std::endl;
   }
 }

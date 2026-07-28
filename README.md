@@ -13,14 +13,22 @@ the bytes over UDP, then deserialize the response into a `StunMessage`.
 
 ## Using it from CMake
 
-Add the project as a subdirectory and link your target with `stun_message`:
+Install the library, then find it from your project:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+cmake --install build --prefix /path/to/install
+```
+
+Then link with the imported CMake target:
 
 ```cmake
-add_subdirectory(stunlib)
+find_package(stun REQUIRED)
 
 target_link_libraries(your_target
     PRIVATE
-        stun_message
+        stun::stun_library
 )
 ```
 
@@ -62,12 +70,12 @@ int main() {
 ## Example UDP client
 
 There is also a tiny client target in this repo. It sends a STUN binding request
-and prints the decoded response:
+and prints the decoded response, including the mapped IP address and port:
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel
-./build/client/client 1.1.1.1 3478
+./build/client/client 74.125.250.129 19302
 ```
 
 If you want to do the socket part yourself, it looks roughly like this:
@@ -91,6 +99,7 @@ To pull the mapped IP address out of the response, look for
 `XOR-MAPPED-ADDRESS` first. Most STUN servers return that one:
 
 ```cpp
+#include "stun_message/ip_address.hpp"
 #include "stun_message/xor_mapped_address_attribute.hpp"
 
 for (const auto &attr : response.attributes) {
@@ -101,11 +110,48 @@ for (const auto &attr : response.attributes) {
   const auto &mapped =
       dynamic_cast<const stun::XorMappedAddressAttribute &>(*attr);
 
-  if (mapped.get_family() == stun::AddressFamily::IPv4) {
-    uint32_t public_ip = mapped.get_ipv4_address();
-  }
+  stun::IpAddress public_ip = mapped.get_ip_address();
+  uint16_t public_port = mapped.get_port();
 }
 ```
+
+## Example UDP server
+
+The repo also builds a very small IPv4 STUN server. It listens on UDP, accepts a
+Binding Request, and sends back a Binding Success Response filled from the
+client's source IP and port. By default it uses `XOR-MAPPED-ADDRESS`, which is
+what modern STUN clients usually expect. You can switch it to the older
+`MAPPED-ADDRESS` attribute if you want to test that path.
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --parallel
+./build/server/server 3478 --xor-mapped-address
+./build/server/server 3478 --mapped-address
+```
+
+You can try it from another terminal with the example client:
+
+```bash
+./build/client/client 127.0.0.1 3478
+```
+
+If you build a response yourself, mapped attributes are created from an
+`IpAddress`:
+
+```cpp
+#include "stun_message/ip_address.hpp"
+#include "stun_message/xor_mapped_address_attribute.hpp"
+
+auto attr = stun::XorMappedAddressAttribute::from_ip_address(
+    client_port,
+    stun::IpAddress::from_ipv4(client_ip),
+    stun::kMagicCookie
+);
+```
+
+If the server receives a parsed STUN Binding message that is not a request, it
+replies with an Error Response and an `ERROR-CODE` attribute.
 
 ## Unit tests
 

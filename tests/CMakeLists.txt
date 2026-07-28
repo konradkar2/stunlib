@@ -2,6 +2,7 @@ add_executable(
     my_tests
     error_code_attribute_test.cpp
     finger_print_attribute_test.cpp
+    ip_address_test.cpp
     mapped_address_attribute_test.cpp
     stun_attribute_test.cpp
     stun_message_test.cpp
@@ -13,7 +14,7 @@ find_package(GTest)
 target_link_libraries(
     my_tests
     PRIVATE
-    stun_message
+    stun_library
     GTest::gtest_main
 )
 

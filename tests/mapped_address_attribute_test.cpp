@@ -20,7 +20,7 @@ constexpr std::array<uint8_t, 20> kSerializedIpv6Value{
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
 
 TEST(MappedAddressAttribute, SerializesIpv4Value) {
-  auto attr = MappedAddressAttribute::create_v4(kPort, kIpv4Address);
+  auto attr = MappedAddressAttribute::from_ip_address(kPort, IpAddress::from_ipv4(kIpv4Address));
   std::array<uint8_t, 8> buffer{};
 
   const size_t size = attr.serialize(buffer);
@@ -29,12 +29,13 @@ TEST(MappedAddressAttribute, SerializesIpv4Value) {
   EXPECT_EQ(buffer, kSerializedIpv4Value);
   EXPECT_EQ(attr.get_type(), AttributeTypeId::MappingAddress);
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv4);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 8);
-  EXPECT_EQ(attr.get_ipv4_address(), kIpv4Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv4(kIpv4Address));
 }
 
 TEST(MappedAddressAttribute, SerializesIpv6Value) {
-  auto attr = MappedAddressAttribute::create_v6(kPort, kIpv6Address.data());
+  auto attr = MappedAddressAttribute::from_ip_address(kPort, IpAddress::from_ipv6(kIpv6Address));
   std::array<uint8_t, 20> buffer{};
 
   const size_t size = attr.serialize(buffer);
@@ -42,8 +43,9 @@ TEST(MappedAddressAttribute, SerializesIpv6Value) {
   EXPECT_EQ(size, kSerializedIpv6Value.size());
   EXPECT_EQ(buffer, kSerializedIpv6Value);
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv6);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 20);
-  EXPECT_EQ(attr.get_ipv6_address(), kIpv6Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv6(kIpv6Address));
 }
 
 TEST(MappedAddressAttribute, DeserializesIpv4Value) {
@@ -52,8 +54,9 @@ TEST(MappedAddressAttribute, DeserializesIpv4Value) {
   attr.deserialize(kSerializedIpv4Value);
 
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv4);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 8);
-  EXPECT_EQ(attr.get_ipv4_address(), kIpv4Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv4(kIpv4Address));
 }
 
 TEST(MappedAddressAttribute, DeserializesIpv6Value) {
@@ -62,19 +65,20 @@ TEST(MappedAddressAttribute, DeserializesIpv6Value) {
   attr.deserialize(kSerializedIpv6Value);
 
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv6);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 20);
-  EXPECT_EQ(attr.get_ipv6_address(), kIpv6Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv6(kIpv6Address));
 }
 
 TEST(MappedAddressAttribute, PrintsIpv4AndIpv6Values) {
-  auto ipv4 = MappedAddressAttribute::create_v4(kPort, kIpv4Address);
+  auto ipv4 = MappedAddressAttribute::from_ip_address(kPort, IpAddress::from_ipv4(kIpv4Address));
   testing::internal::CaptureStdout();
   ipv4.print_value();
   const std::string ipv4_output = testing::internal::GetCapturedStdout();
   EXPECT_NE(ipv4_output.find("IPv4"), std::string::npos);
   EXPECT_NE(ipv4_output.find("192.0.2.1"), std::string::npos);
 
-  auto ipv6 = MappedAddressAttribute::create_v6(0x5678, kIpv6Address.data());
+  auto ipv6 = MappedAddressAttribute::from_ip_address(0x5678, IpAddress::from_ipv6(kIpv6Address));
   testing::internal::CaptureStdout();
   ipv6.print_value();
   const std::string ipv6_output = testing::internal::GetCapturedStdout();

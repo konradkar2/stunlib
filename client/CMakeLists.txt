@@ -8,7 +8,7 @@ target_sources(client
 
 target_link_libraries(client
     PRIVATE
-        stun_message
+        stun_library
 )
 
 target_include_directories(client

@@ -6,15 +6,29 @@
 #include <memory>
 
 namespace stun {
+namespace {
+
+constexpr size_t kAttributeTypeOffset = 0;
+constexpr size_t kAttributeLengthOffset = 2;
+constexpr size_t kAttributePaddingAlignment = 4;
+
+size_t padded_attribute_length(size_t length) {
+  return (length + (kAttributePaddingAlignment - 1)) &
+         ~(kAttributePaddingAlignment - 1);
+}
+
+} // namespace
 
 void StunAttributeDeserializer::split_attributes(std::span<const uint8_t> serialized_data,
                                                  std::vector<std::span<const uint8_t>> &result) {
   size_t offset = 0;
   while (offset < serialized_data.size()) {
     uint16_t length_raw;
-    std::memcpy(&length_raw, serialized_data.data() + offset + 2, 2);
+    std::memcpy(&length_raw,
+                serialized_data.data() + offset + kAttributeLengthOffset,
+                sizeof(length_raw));
     uint16_t length = ntohs(length_raw);
-    const size_t padded_length = (length + 3) & ~static_cast<size_t>(3);
+    const size_t padded_length = padded_attribute_length(length);
     result.push_back(serialized_data.subspan(offset, k_type_length_size + length));
     offset += k_type_length_size + padded_length;
   }
@@ -28,7 +42,7 @@ std::vector<std::unique_ptr<StunAttribute>> StunAttributeDeserializer::deseriali
 
   for (const auto& attr : attributes_vector) {
     uint16_t raw;
-    std::memcpy(&raw, attr.data(), 2);
+    std::memcpy(&raw, attr.data() + kAttributeTypeOffset, sizeof(raw));
     AttributeTypeId typeId;
     typeId = static_cast<AttributeTypeId>(ntohs(raw));
     

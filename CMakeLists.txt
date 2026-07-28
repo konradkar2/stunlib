@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(stun LANGUAGES CXX)
+project(stun VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,6 +30,7 @@ endif()
 
 add_subdirectory(stun_message)
 add_subdirectory(client)
+add_subdirectory(server)
 
 enable_testing()
 add_subdirectory(tests)

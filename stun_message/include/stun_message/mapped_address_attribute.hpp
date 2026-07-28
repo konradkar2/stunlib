@@ -1,26 +1,24 @@
 #pragma once
 
+#include "stun_message/ip_address.hpp"
 #include "stun_message/stun_attribute.hpp"
 #include <array>
 
 namespace stun {
 
 class MappedAddressAttribute : public StunAttribute {
-  AddressFamily m_family;
   uint16_t m_port;
-  union {
-    uint32_t ipv4;
-    uint32_t ipv6[4];
-  } m_address;
+  IpAddress m_address;
 
 public:
-  MappedAddressAttribute() : StunAttribute(AttributeTypeId::MappingAddress) {}
+  MappedAddressAttribute()
+      : StunAttribute(AttributeTypeId::MappingAddress), m_port(0),
+        m_address(IpAddress::from_ipv4(0)) {}
   AddressFamily get_family() const;
-  uint32_t get_ipv4_address() const;
-  std::array<uint32_t,4> get_ipv6_address() const;
-  static MappedAddressAttribute create_v4(uint16_t port, uint32_t address);
-  static MappedAddressAttribute create_v6(uint16_t port,
-                                          const uint32_t address[4]);
+  uint16_t get_port() const;
+  IpAddress get_ip_address() const;
+  static MappedAddressAttribute from_ip_address(uint16_t port,
+                                                IpAddress address);
   uint16_t get_length() const override;
   void deserialize(std::span<const uint8_t> source) override;
   size_t serialize(std::span<uint8_t> target) const override;

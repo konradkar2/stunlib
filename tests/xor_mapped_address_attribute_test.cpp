@@ -23,8 +23,8 @@ constexpr std::array<uint8_t, 20> kSerializedIpv6Value{
     0x03, 0x04, 0xA0, 0xB0, 0xC0, 0xD0, 0x11, 0x22, 0x33, 0x45};
 
 TEST(XorMappedAddressAttribute, SerializesIpv4Value) {
-  auto attr =
-      XorMappedAddressAttribute::create_v4(kPort, kIpv4Address, kMagicCookie);
+  auto attr = XorMappedAddressAttribute::from_ip_address(
+      kPort, IpAddress::from_ipv4(kIpv4Address), kMagicCookie);
   std::array<uint8_t, 8> buffer{};
 
   const size_t size = attr.serialize(buffer);
@@ -33,13 +33,15 @@ TEST(XorMappedAddressAttribute, SerializesIpv4Value) {
   EXPECT_EQ(buffer, kSerializedIpv4Value);
   EXPECT_EQ(attr.get_type(), AttributeTypeId::XorMappingAddress);
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv4);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 8);
-  EXPECT_EQ(attr.get_ipv4_address(), kIpv4Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv4(kIpv4Address));
 }
 
 TEST(XorMappedAddressAttribute, SerializesIpv6Value) {
-  auto attr = XorMappedAddressAttribute::create_v6(
-      kPort, kIpv6Address.data(), kMagicCookie, kTransactionId.data());
+  auto attr = XorMappedAddressAttribute::from_ip_address(
+      kPort, IpAddress::from_ipv6(kIpv6Address), kMagicCookie,
+      kTransactionId.data());
   std::array<uint8_t, 20> buffer{};
 
   const size_t size = attr.serialize(buffer);
@@ -47,8 +49,9 @@ TEST(XorMappedAddressAttribute, SerializesIpv6Value) {
   EXPECT_EQ(size, kSerializedIpv6Value.size());
   EXPECT_EQ(buffer, kSerializedIpv6Value);
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv6);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 20);
-  EXPECT_EQ(attr.get_ipv6_address(), kIpv6Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv6(kIpv6Address));
 }
 
 TEST(XorMappedAddressAttribute, DeserializesIpv4Value) {
@@ -58,8 +61,9 @@ TEST(XorMappedAddressAttribute, DeserializesIpv4Value) {
   attr.set_magic_cookie(kMagicCookie);
 
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv4);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 8);
-  EXPECT_EQ(attr.get_ipv4_address(), kIpv4Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv4(kIpv4Address));
 }
 
 TEST(XorMappedAddressAttribute, DeserializesIpv6Value) {
@@ -70,21 +74,23 @@ TEST(XorMappedAddressAttribute, DeserializesIpv6Value) {
   attr.set_transaction_id(kTransactionId.data());
 
   EXPECT_EQ(attr.get_family(), AddressFamily::IPv6);
+  EXPECT_EQ(attr.get_port(), kPort);
   EXPECT_EQ(attr.get_length(), 20);
-  EXPECT_EQ(attr.get_ipv6_address(), kIpv6Address);
+  EXPECT_EQ(attr.get_ip_address(), IpAddress::from_ipv6(kIpv6Address));
 }
 
 TEST(XorMappedAddressAttribute, PrintsIpv4AndIpv6Values) {
-  auto ipv4 =
-      XorMappedAddressAttribute::create_v4(kPort, kIpv4Address, kMagicCookie);
+  auto ipv4 = XorMappedAddressAttribute::from_ip_address(
+      kPort, IpAddress::from_ipv4(kIpv4Address), kMagicCookie);
   testing::internal::CaptureStdout();
   ipv4.print_value();
   const std::string ipv4_output = testing::internal::GetCapturedStdout();
   EXPECT_NE(ipv4_output.find("IPv4"), std::string::npos);
   EXPECT_NE(ipv4_output.find("192.0.2.1"), std::string::npos);
 
-  auto ipv6 = XorMappedAddressAttribute::create_v6(
-      0x5678, kIpv6Address.data(), kMagicCookie, kTransactionId.data());
+  auto ipv6 = XorMappedAddressAttribute::from_ip_address(
+      0x5678, IpAddress::from_ipv6(kIpv6Address), kMagicCookie,
+      kTransactionId.data());
   testing::internal::CaptureStdout();
   ipv6.print_value();
   const std::string ipv6_output = testing::internal::GetCapturedStdout();

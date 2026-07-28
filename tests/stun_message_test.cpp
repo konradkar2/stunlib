@@ -90,24 +90,24 @@ TEST(StunMessage, RoundTripsMessageWithKnownAttributes) {
   StunMessage message{};
   message.header = test::make_header(StunClass::success_response);
   message.attributes.push_back(std::make_unique<MappedAddressAttribute>(
-      MappedAddressAttribute::create_v4(kMappedAddressPort,
-                                        kMappedIpv4Address)));
+      MappedAddressAttribute::from_ip_address(
+          kMappedAddressPort, IpAddress::from_ipv4(kMappedIpv4Address))));
 
   message.attributes.push_back(std::make_unique<MappedAddressAttribute>(
-      MappedAddressAttribute::create_v6(kAlternateMappedAddressPort,
-                                        kIpv6Address.data())));
+      MappedAddressAttribute::from_ip_address(
+          kAlternateMappedAddressPort, IpAddress::from_ipv6(kIpv6Address))));
 
   message.attributes.push_back(std::make_unique<XorMappedAddressAttribute>(
-      XorMappedAddressAttribute::create_v4(kXorMappedAddressPort,
-                                           kXorMappedIpv4Address,
-                                           kMagicCookie)));
+      XorMappedAddressAttribute::from_ip_address(
+          kXorMappedAddressPort, IpAddress::from_ipv4(kXorMappedIpv4Address),
+          kMagicCookie)));
 
   std::array<uint32_t, 3> transaction_id{message.header.transaction_id[0],
                                          message.header.transaction_id[1],
                                          message.header.transaction_id[2]};
   message.attributes.push_back(std::make_unique<XorMappedAddressAttribute>(
-      XorMappedAddressAttribute::create_v6(
-          kXorMappedAddressIpv6Port, kIpv6Address.data(),
+      XorMappedAddressAttribute::from_ip_address(
+          kXorMappedAddressIpv6Port, IpAddress::from_ipv6(kIpv6Address),
           kMagicCookie, transaction_id.data())));
 
   message.attributes.push_back(std::make_unique<ErrorCodeAttribute>(
@@ -132,17 +132,17 @@ TEST(StunMessage, RoundTripsMessageWithKnownAttributes) {
   ASSERT_EQ(decoded.attributes.size(), 6);
 
   EXPECT_EQ(test::as_attribute<MappedAddressAttribute>(decoded.attributes[0])
-                .get_ipv4_address(),
-            kMappedIpv4Address);
+                .get_ip_address(),
+            IpAddress::from_ipv4(kMappedIpv4Address));
   EXPECT_EQ(test::as_attribute<MappedAddressAttribute>(decoded.attributes[1])
-                .get_ipv6_address(),
-            kIpv6Address);
+                .get_ip_address(),
+            IpAddress::from_ipv6(kIpv6Address));
   EXPECT_EQ(test::as_attribute<XorMappedAddressAttribute>(decoded.attributes[2])
-                .get_ipv4_address(),
-            kXorMappedIpv4Address);
+                .get_ip_address(),
+            IpAddress::from_ipv4(kXorMappedIpv4Address));
   EXPECT_EQ(test::as_attribute<XorMappedAddressAttribute>(decoded.attributes[3])
-                .get_ipv6_address(),
-            kIpv6Address);
+                .get_ip_address(),
+            IpAddress::from_ipv6(kIpv6Address));
   EXPECT_EQ(test::as_attribute<ErrorCodeAttribute>(decoded.attributes[4]).get_length(),
             7);
   EXPECT_EQ(test::as_attribute<FingerPrintAttribute>(decoded.attributes[5]).get_length(),
@@ -165,23 +165,23 @@ TEST(StunMessage, PrintsHeaderAndAttributes) {
   StunMessage message{};
   message.header = test::make_header(StunClass::error_response);
   message.attributes.push_back(std::make_unique<MappedAddressAttribute>(
-      MappedAddressAttribute::create_v4(kMappedAddressPort,
-                                        kMappedIpv4Address)));
+      MappedAddressAttribute::from_ip_address(
+          kMappedAddressPort, IpAddress::from_ipv4(kMappedIpv4Address))));
 
   message.attributes.push_back(std::make_unique<MappedAddressAttribute>(
-      MappedAddressAttribute::create_v6(kAlternateMappedAddressPort,
-                                        kIpv6Address.data())));
+      MappedAddressAttribute::from_ip_address(
+          kAlternateMappedAddressPort, IpAddress::from_ipv6(kIpv6Address))));
   message.attributes.push_back(std::make_unique<XorMappedAddressAttribute>(
-      XorMappedAddressAttribute::create_v4(kXorMappedAddressPort,
-                                           kXorMappedIpv4Address,
-                                           kMagicCookie)));
+      XorMappedAddressAttribute::from_ip_address(
+          kXorMappedAddressPort, IpAddress::from_ipv4(kXorMappedIpv4Address),
+          kMagicCookie)));
 
   std::array<uint32_t, 3> transaction_id{message.header.transaction_id[0],
                                          message.header.transaction_id[1],
                                          message.header.transaction_id[2]};
   message.attributes.push_back(std::make_unique<XorMappedAddressAttribute>(
-      XorMappedAddressAttribute::create_v6(
-          kXorMappedAddressIpv6Port, kIpv6Address.data(),
+      XorMappedAddressAttribute::from_ip_address(
+          kXorMappedAddressIpv6Port, IpAddress::from_ipv6(kIpv6Address),
           kMagicCookie, transaction_id.data())));
   message.attributes.push_back(std::make_unique<ErrorCodeAttribute>(
       ErrorCodeAttribute::create_error(404, "Nope")));

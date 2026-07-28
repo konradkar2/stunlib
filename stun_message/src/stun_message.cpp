@@ -16,8 +16,32 @@ static_assert(sizeof(StunHeaderRaw) == kStunHeaderSize);
 
 namespace {
 
+constexpr uint16_t kMethodBits0To3Mask = 0x000F;
+constexpr uint16_t kMethodBits4To6Mask = 0x0070;
+constexpr uint16_t kMethodBits7To11Mask = 0x0F80;
+constexpr uint16_t kEncodedMethodBits4To6Mask = 0x00E0;
+constexpr uint16_t kEncodedMethodBits7To11Mask = 0x3E00;
+constexpr uint16_t kClassBit0Mask = 0x01;
+constexpr uint16_t kClassBit1Mask = 0x02;
+constexpr uint16_t kEncodedClassBit0Mask = 0x0010;
+constexpr uint16_t kEncodedClassBit1Mask = 0x0100;
+constexpr uint16_t kMethodBits4To6EncodeShift = 1;
+constexpr uint16_t kMethodBits7To11EncodeShift = 2;
+constexpr uint16_t kClassBit0EncodeShift = 4;
+constexpr uint16_t kClassBit1EncodeShift = 7;
+constexpr uint16_t kMethodBits4To6DecodeShift = 1;
+constexpr uint16_t kMethodBits7To11DecodeShift = 2;
+constexpr uint16_t kClassBit0DecodeShift = 4;
+constexpr uint16_t kClassBit1DecodeShift = 7;
+constexpr size_t kAttributeTypeFieldLength = sizeof(uint16_t);
+constexpr size_t kAttributeLengthFieldLength = sizeof(uint16_t);
+constexpr size_t kAttributeHeaderLength =
+    kAttributeTypeFieldLength + kAttributeLengthFieldLength;
+constexpr size_t kAttributePaddingAlignment = 4;
+
 size_t padded_attribute_length(size_t length) {
-  return (length + 3) & ~static_cast<size_t>(3);
+  return (length + (kAttributePaddingAlignment - 1)) &
+         ~(kAttributePaddingAlignment - 1);
 }
 
 } // namespace
@@ -28,22 +52,27 @@ uint16_t encode_message_type(StunMethod method, StunClass cls) {
   }
   const uint16_t m = static_cast<uint16_t>(method);
   const uint16_t c = static_cast<uint16_t>(cls);
-  uint16_t message_type = (m & 0x000F) |        // M0-M3 -> bits 0..3
-                          ((m & 0x0070) << 1) | // M4-M6 -> bits 5..7
-                          ((m & 0x0F80) << 2) | // M7-M11 -> bits 9..13
-                          ((c & 0x02) << 7) |   // C1 -> bit 8
-                          ((c & 0x01) << 4);    // C0 -> bit 4
+  uint16_t message_type =
+      (m & kMethodBits0To3Mask) |
+      ((m & kMethodBits4To6Mask) << kMethodBits4To6EncodeShift) |
+      ((m & kMethodBits7To11Mask) << kMethodBits7To11EncodeShift) |
+      ((c & kClassBit1Mask) << kClassBit1EncodeShift) |
+      ((c & kClassBit0Mask) << kClassBit0EncodeShift);
 
   return message_type;
 }
 
 std::pair<StunMethod, StunClass> decode_message_type(uint16_t message_type) {
-  uint16_t m = (message_type & 0x000F) |        // M0-M3
-               ((message_type & 0x00E0) >> 1) | // M4-M6
-               ((message_type & 0x3E00) >> 2);  // M7-M11
+  uint16_t m =
+      (message_type & kMethodBits0To3Mask) |
+      ((message_type & kEncodedMethodBits4To6Mask) >>
+       kMethodBits4To6DecodeShift) |
+      ((message_type & kEncodedMethodBits7To11Mask) >>
+       kMethodBits7To11DecodeShift);
 
-  uint16_t c = ((message_type & 0x0100) >> 7) | // C1
-               ((message_type & 0x0010) >> 4);  // C0
+  uint16_t c =
+      ((message_type & kEncodedClassBit1Mask) >> kClassBit1DecodeShift) |
+      ((message_type & kEncodedClassBit0Mask) >> kClassBit0DecodeShift);
 
   return {static_cast<StunMethod>(m), static_cast<StunClass>(c)};
 }
@@ -158,7 +187,7 @@ size_t StunMessage::serialize(std::span<uint8_t> target) const {
   serialized_header.message_length = 0;
   for (const auto &attr : attributes) {
     serialized_header.message_length += static_cast<uint16_t>(
-        sizeof(uint16_t) + sizeof(uint16_t) + padded_attribute_length(attr->get_length()));
+        kAttributeHeaderLength + padded_attribute_length(attr->get_length()));
   }
 
   offset += serialized_header.serialize(target.subspan(offset));
