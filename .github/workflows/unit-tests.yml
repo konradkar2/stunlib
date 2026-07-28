@@ -1,0 +1,74 @@
+name: Unit tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ libgtest-dev
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run unit tests
+        run: ctest --test-dir build --output-on-failure
+
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ gcovr libgtest-dev
+
+      - name: Configure CMake with coverage
+        run: cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DSTUN_ENABLE_COVERAGE=ON
+
+      - name: Build
+        run: cmake --build build-coverage --parallel
+
+      - name: Run unit tests
+        run: ctest --test-dir build-coverage --output-on-failure
+
+      - name: Generate coverage report
+        run: |
+          gcovr \
+            --root . \
+            --filter 'stun_message/src/.*' \
+            --txt coverage.txt \
+            --xml-pretty \
+            --xml coverage.xml \
+            --print-summary
+
+      - name: Add coverage to job summary
+        run: |
+          echo "### Coverage" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          cat coverage.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.txt
+            coverage.xml
