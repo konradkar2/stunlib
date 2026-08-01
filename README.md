@@ -86,12 +86,11 @@ If you want to do the socket part yourself, it looks roughly like this:
 
 #include <sys/socket.h>
 
-int fd = socket(AF_INET, SOCK_DGRAM, 0);
-
 stun::StunClient client("1.1.1.1", 3478);
-client.send(fd, stun::create_stun_request());
+client.create_client_socket();
+client.send(stun::create_stun_request());
 
-stun::StunMessage response = client.receive(fd);
+stun::StunMessage response = client.receive();
 response.print();
 ```
 
