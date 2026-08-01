@@ -44,6 +44,9 @@ struct StunMessage {
   StunHeader header;
   std::vector<std::unique_ptr<StunAttribute>> attributes;
 
+  StunMessage() = default;
+  StunMessage(StunClass cclass, const uint32_t transaction_id[3]);
+
   static StunMessage deserialize(std::span<const uint8_t> src);
   size_t serialize(std::span<uint8_t> target) const;
   void print();
