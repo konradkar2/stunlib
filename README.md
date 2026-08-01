@@ -174,4 +174,38 @@ cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DSTUN_ENABLE_COVERAGE=ON
 cmake --build build-coverage --parallel
 ctest --test-dir build-coverage --output-on-failure
 gcovr --root . --filter 'stun_library/src/.*' --txt --print-summary
+
+## End-to-end tests
+
+This repository includes two simple end-to-end shell tests that exercise the
+example `client` and `server` binaries. You can find them under
+`tests/e2e_tests/`.
+
+- [tests/e2e_tests/client_to_google_server_test.sh](tests/e2e_tests/client_to_google_server_test.sh) — runs the example `client` against
+  Google's public STUN server at `74.125.250.129:19302` and writes output to
+  `tests/e2e_tests/client_to_google_server.log`. It greps the log for the
+  `XOR-MAPPED-ADDRESS` (or `MAPPED-ADDRESS`) attribute and prints a colored
+  `TEST PASSED` / `TEST FAILED` message.
+
+- [tests/e2e_tests/client_to_server_test.sh](tests/e2e_tests/client_to_server_test.sh) — starts the local example `server`,
+  runs the example `client` against it, writes separate `server.log` and
+  `client.log` files under `tests/e2e_tests/`, and reports pass/fail based on
+  the client's output.
+
+Both scripts expect the example binaries to be built in `build/`:
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --parallel
+```
+
+Make the scripts executable and run them:
+
+```bash
+chmod +x tests/e2e_tests/*.sh
+./tests/e2e_tests/client_to_google_server_test.sh
+./tests/e2e_tests/client_to_server_test.sh
+```
+
+If a test fails, inspect the corresponding log(s) in `tests/e2e_tests/`.
 ```

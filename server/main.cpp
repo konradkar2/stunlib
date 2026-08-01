@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
     print_usage(argv[0]);
     return 1;
   }
+  std::cout << "x";
   try {
     const uint16_t port = static_cast<uint16_t>(std::stoi(argv[1]));
     bool mode = parse_address_attribute_mode(argc, argv);

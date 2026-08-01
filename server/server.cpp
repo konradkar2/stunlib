@@ -9,9 +9,9 @@ StunServer::~StunServer() {}
 
 void StunServer::run() {
   create_server_socket();
-  std::cout << "STUN server listening on 0.0.0.0:" << m_port << '\n';
+  std::cout << "STUN server listening on 0.0.0.0:" << m_port << std::endl;
   std::cout << "Address attribute mode: "
-            << (m_xor_mapped_mode ? "XOR-MAPPED-ADDRESS" : "MAPPED-ADDRESS") << '\n';
+            << (m_xor_mapped_mode ? "XOR-MAPPED-ADDRESS" : "MAPPED-ADDRESS") << std::endl;
 
   while (true) {
     std::array<uint8_t, stun::kBufferSize> request_buffer{};
