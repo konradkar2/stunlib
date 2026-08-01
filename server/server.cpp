@@ -8,7 +8,7 @@ StunServer::StunServer(uint16_t port, bool xor_mapped_mode = true) :
 StunServer::~StunServer() {}
 
 void StunServer::run() {
-  const int fd = create_server_socket();
+  create_server_socket();
   std::cout << "STUN server listening on 0.0.0.0:" << m_port << '\n';
   std::cout << "Address attribute mode: "
             << (m_xor_mapped_mode ? "XOR-MAPPED-ADDRESS" : "MAPPED-ADDRESS") << '\n';
@@ -18,7 +18,7 @@ void StunServer::run() {
     sockaddr_in client_address{};
     socklen_t client_address_size = sizeof(client_address);
 
-    const ssize_t received_size = recvfrom(fd, request_buffer.data(), 
+    const ssize_t received_size = recvfrom(m_socket_fd, request_buffer.data(), 
                                            request_buffer.size(), 0,
                                            reinterpret_cast<sockaddr *>(&client_address),
                                            &client_address_size);
@@ -52,21 +52,20 @@ void StunServer::run() {
   }
 }
 
-int StunServer::create_server_socket() {
-  const int fd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (fd < 0) {
+void StunServer::create_server_socket() {
+  m_socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (m_socket_fd < 0) {
     throw std::runtime_error(errno_message("cannot open UDP socket", errno));
   }
   sockaddr_in address{};
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = htonl(INADDR_ANY);
   address.sin_port = htons(m_port);
-  if (bind(fd, reinterpret_cast<const sockaddr *>(&address), sizeof(address)) < 0) {
+  if (bind(m_socket_fd, reinterpret_cast<const sockaddr *>(&address), sizeof(address)) < 0) {
     const int error_number = errno;
-    close(fd);
+    close(m_socket_fd);
     throw std::runtime_error(errno_message("cannot bind UDP socket", error_number));
   }
-  return fd;
 }
 
 StunMessage StunServer::create_binding_response(const StunMessage &request,

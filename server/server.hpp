@@ -20,13 +20,13 @@ public:
   virtual ~StunServer();
 
   void run();
+  void create_server_socket();
   
 private:
   uint16_t m_port;
   int m_socket_fd;
   bool m_xor_mapped_mode;
 
-  int create_server_socket();
   StunMessage create_binding_response(const StunMessage &request,
                                       const sockaddr_in &client_address);
   StunMessage create_error_response(const StunMessage &request,
