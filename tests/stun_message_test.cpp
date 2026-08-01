@@ -86,6 +86,21 @@ TEST(StunMessage, CreatesEmptyBindingRequestWithMagicCookie) {
   EXPECT_TRUE(request.attributes.empty());
 }
 
+TEST(StunMessage, ConstructsBindingMessageWithClassAndTransactionId) {
+  const uint32_t transaction_id[3]{0x01020304, 0xA0B0C0D0, 0x11223344};
+
+  const StunMessage message{StunClass::success_response, transaction_id};
+
+  EXPECT_EQ(message.header.method, StunMethod::binding);
+  EXPECT_EQ(message.header.cclass, StunClass::success_response);
+  EXPECT_EQ(message.header.message_length, 0);
+  EXPECT_EQ(message.header.magic_cookie, kMagicCookie);
+  EXPECT_EQ(message.header.transaction_id[0], transaction_id[0]);
+  EXPECT_EQ(message.header.transaction_id[1], transaction_id[1]);
+  EXPECT_EQ(message.header.transaction_id[2], transaction_id[2]);
+  EXPECT_TRUE(message.attributes.empty());
+}
+
 TEST(StunMessage, RoundTripsMessageWithKnownAttributes) {
   StunMessage message{};
   message.header = test::make_header(StunClass::success_response);

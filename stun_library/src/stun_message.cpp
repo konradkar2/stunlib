@@ -94,6 +94,15 @@ std::ostream& operator<<(std::ostream& os, StunClass cclass) {
   return os << "unknown";
 }
 
+StunMessage::StunMessage(StunClass cclass, const uint32_t transaction_id[3]) {
+  header.method = StunMethod::binding;
+  header.cclass = cclass;
+  header.message_length = 0;
+  header.magic_cookie = kMagicCookie;
+  std::memcpy(header.transaction_id, transaction_id,
+              sizeof(header.transaction_id));
+}
+
 void StunMessage::print() {
   std::cout << "HEADER\n";
   std::cout << std::hex;
@@ -208,18 +217,14 @@ size_t StunMessage::serialize(std::span<uint8_t> target) const {
 }
 
 StunMessage create_stun_request() {
-  StunMessage message{};
-
-  message.header.cclass = StunClass::request;
-  message.header.method = StunMethod::binding;
-  message.header.message_length = 0;
-  message.header.magic_cookie = kMagicCookie;
   srand (static_cast<int>(time(NULL)));
-  message.header.transaction_id[0] = std::rand();
-  message.header.transaction_id[1] = std::rand();
-  message.header.transaction_id[2] = std::rand();
+  const uint32_t transaction_id[3] = {
+      static_cast<uint32_t>(std::rand()),
+      static_cast<uint32_t>(std::rand()),
+      static_cast<uint32_t>(std::rand()),
+  };
 
-  return message;
+  return StunMessage{StunClass::request, transaction_id};
 }
 
 } // namespace stun

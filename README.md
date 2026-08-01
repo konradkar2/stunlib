@@ -2,7 +2,7 @@
 
 [![Unit tests](https://github.com/konradkar2/stunlib/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/konradkar2/stunlib/actions/workflows/unit-tests.yml)
 
-C++20 STUN message library inspired by RFC 8489.
+C++20 STUN message library based on RFC 8489.
 
 `stunlib` is a small library for building and parsing STUN messages. The message
 code is kept separate from the socket code, so you can use it with the included
@@ -32,13 +32,13 @@ target_link_libraries(your_target
 )
 ```
 
-Headers live under the `stun_library/` prefix:
+Headers can be found under `stun_library/` prefix:
 
 ```cpp
 #include "stun_library/stun_message.hpp"
 ```
 
-## Basic message usage
+## Basic usage
 
 ```cpp
 #include "stun_library/stun_message.hpp"
@@ -78,7 +78,7 @@ cmake --build build --parallel
 ./build/client/client 74.125.250.129 19302
 ```
 
-If you want to do the socket part yourself, it looks roughly like this:
+If you want to do the socket part yourself:
 
 ```cpp
 #include "client.hpp"
@@ -116,7 +116,7 @@ for (const auto &attr : response.attributes) {
 
 ## Example UDP server
 
-The repo also builds a very small IPv4 STUN server. It listens on UDP, accepts a
+The repo also builds a very small IPv4 STUN UDP server. It acceps
 Binding Request, and sends back a Binding Success Response filled from the
 client's source IP and port. By default it uses `XOR-MAPPED-ADDRESS`, which is
 what modern STUN clients usually expect. You can switch it to the older
@@ -161,19 +161,6 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
-
-## Coverage
-
-Coverage is calculated in GitHub Actions with `gcovr`. You can find the text
-summary in the job output, and the full report is uploaded as an artifact.
-
-To calculate it locally:
-
-```bash
-cmake -S . -B build-coverage -DCMAKE_BUILD_TYPE=Debug -DSTUN_ENABLE_COVERAGE=ON
-cmake --build build-coverage --parallel
-ctest --test-dir build-coverage --output-on-failure
-gcovr --root . --filter 'stun_library/src/.*' --txt --print-summary
 
 ## End-to-end tests
 
