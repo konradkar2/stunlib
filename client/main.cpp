@@ -74,11 +74,6 @@ int main(int argc, char *argv[]) {
   }
 
   try {
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-      throw std::runtime_error(errno_message("cannot open socket", errno));
-    }
-
     const std::string stun_address = argv[1];
     const uint16_t stun_port =
         static_cast<uint16_t>(std::stoi(std::string(argv[2])));
@@ -86,9 +81,10 @@ int main(int argc, char *argv[]) {
     StunMessage request_message = create_stun_request();
     request_message.print();
     StunClient client(stun_address, stun_port);
-    client.send(fd, request_message);
+    client.create_client_socket();
+    client.send(request_message);
 
-    StunMessage response_message = client.receive(fd);
+    StunMessage response_message = client.receive();
     response_message.print();
 
     if (const auto mapped_address = get_mapped_address(response_message)) {
