@@ -5,7 +5,9 @@ namespace stun {
 StunServer::StunServer(uint16_t port, bool xor_mapped_mode = true)
     : m_port(port), m_xor_mapped_mode(xor_mapped_mode) {}
 
-StunServer::~StunServer() {}
+StunServer::~StunServer() {
+  close(m_socket_fd);
+}
 
 void StunServer::run() {
   create_server_socket();

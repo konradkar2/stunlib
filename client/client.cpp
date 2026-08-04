@@ -16,6 +16,14 @@ std::string errno_message(const std::string &message, int error_number) {
 
 } // namespace
 
+StunClient::StunClient(std::string server_ip, uint16_t server_port) 
+                        : m_server_ip(server_ip), 
+                          m_server_port(server_port) {}
+
+StunClient::~StunClient() {
+  close(m_socket_fd);
+}
+
 void StunClient::send(std::span<const uint8_t> data) {
   sockaddr_in servaddr{};
   bzero(&servaddr, sizeof(servaddr));
